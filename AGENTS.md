@@ -6,7 +6,7 @@ This is BYU-Idaho's fork of Civum/sagas. We own the **experience layer** only.
 Read `docs/START-EXPERIENCE-LAYER.md` and `apps/web/STATEMENT-OF-WORK.md` before proposing work.
 When in conflict `apps/web/STATEMENT-OF-WORK.md` supersedes `docs/START-EXPERIENCE-LAYER.md`.
 
-## Vocabulary (contract 2.0.0)
+## Vocabulary (contract 2.1.0)
 
 Training data and older copies of this repo use outdated terms. Use these:
 
@@ -19,6 +19,11 @@ Training data and older copies of this repo use outdated terms. Use these:
 - `lineageId` and `independentLineageCount` have been removed. Support is
   counted as independent records other people bring. Agreement never counts.
 - "Account" is not a term in this project. Flag it if you find it.
+- **Section** — a page section: an id, a site, a heading (contract 2.1.0).
+- **Composition** — a section's passage: its text plus spans.
+- **Span** — a stretch of a composition's text that leads back to the claims
+  behind it, with optional details when it is narrower than a whole claim.
+  Spans carry character offsets into `composition.text`.
 
 ## Architecture rules
 
@@ -58,6 +63,23 @@ Other layers' work: `apps/capture-api`, `apps/capture-web`, `apps/graph-api`,
 `packages/contracts` and `packages/fixtures` are shared with two other
 universities. Do not change them in this fork. Changes there go upstream as a
 pull request, decided at a specification meeting.
+
+## Never pull or merge upstream on your own
+
+`packages/contracts` and `packages/fixtures` are shared with two other
+universities. Our fork is pinned on purpose; nothing changes until we pull.
+Pulling forward is decided together at a specification meeting, and done as its
+own branch and pull request by one person. Do not run `git pull upstream`,
+`git merge upstream/main`, or edit anything under `packages/contracts` or
+`packages/fixtures` in this fork.
+
+## Before starting work
+
+- Always `git pull` from `origin` (the fork) before creating a branch, so you
+  are working against what the team has merged.
+- Check `git log -1` and the issues tab for an open "Upstream contract is at
+  vX.Y.Z" issue before assuming the contract version in your working tree is
+  current.
 
 ## Working in this repo
 
