@@ -110,7 +110,7 @@ and nothing that calls it has to change.
 A5 now models sections from the shared contract and groups claims by source
 record.
 
-### Da2 · A seed script for any database
+### Da2 · A seed script for any database 
 
 **Workstream:** Data. **Status:** Later. Needs Da1.
 
@@ -152,7 +152,7 @@ map.
 **Done when:** a search field filters sites by name, other names and address,
 and the list follows the area the map shows. It works from the keyboard.
 
-### M3 · Site icons
+### M3 · Site icons 
 
 **Workstream:** Map and discovery. **Status:** Ready
 
@@ -200,7 +200,7 @@ your fork. Start from `PAGE-MODEL.md` before then.
 including t0 with no sections. It is a tool for building and checking, so it can
 live on `/dev`.
 
-### De1 · Wireframes for the landing page and the map
+### De1 · Wireframes for the landing page and the map (Michael)
 
 **Workstream:** Design. **Status:** Ready
 
@@ -216,7 +216,7 @@ live on `/dev`.
 **Read first.** `PAGE-MODEL.md`, and "Design direction" in
 `STATEMENT-OF-WORK.md`.
 
-### De2 · Landing page copy
+### De2 · Landing page copy (Michael)
 
 **Workstream:** Design. **Status:** Ready
 
@@ -225,7 +225,7 @@ live on `/dev`.
 **Done when:** a draft goes to the sponsor in the questions issue. It names no
 organisation and marks anything invented.
 
-### De3 · What is missing and what would be nice
+### De3 · What is missing and what would be nice (Michael)
 
 **Workstream:** Design. **Status:** Ready
 
