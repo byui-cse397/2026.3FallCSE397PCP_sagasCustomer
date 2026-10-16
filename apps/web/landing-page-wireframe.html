@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sagas landing page wireframe</title>
+    <style>
+      :root {
+        --bg: #eef0f2;
+        --paper: #fff;
+        --ink: #20242a;
+        --muted: #606a75;
+        --line: #b9c0c8;
+        --box: #e1e5e9;
+        --accent: #2f5fa8;
+        --note: #fff8dc;
+        --noteline: #d8c77a;
+        --sans: Arial, Helvetica, sans-serif;
+        --serif: Georgia, 'Times New Roman', serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.55 var(--sans);
+      }
+
+      .wrap {
+        display: grid;
+        gap: 20px;
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+
+      .top h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.2;
+      }
+
+      .top p {
+        max-width: 76ch;
+        margin: 0.35rem 0 0;
+        color: var(--muted);
+      }
+
+      .cols {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+
+      .page {
+        display: grid;
+        gap: 0;
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+      }
+
+      .region {
+        position: relative;
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+        padding: 22px;
+        border-bottom: 1px dashed var(--line);
+      }
+
+      .region:last-child {
+        border-bottom: 0;
+      }
+
+      .pin {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--ink);
+        color: var(--paper);
+        font-size: 0.75rem;
+        line-height: 22px;
+        text-align: center;
+      }
+
+      .draft {
+        padding: 7px 22px;
+        background: var(--box);
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-top: 20px;
+      }
+
+      .wordmark {
+        font: 600 1.25rem var(--serif);
+      }
+
+      .nav-link {
+        width: 95px;
+        height: 26px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--box);
+      }
+
+      .eyebrow,
+      .label {
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(170px, 0.8fr);
+        gap: 24px;
+        align-items: center;
+        padding-top: 46px;
+        padding-bottom: 46px;
+      }
+
+      .hero h2 {
+        max-width: 11ch;
+        margin: 0;
+        font: 500 clamp(2.2rem, 6vw, 4rem)/1.02 var(--serif);
+      }
+
+      .hero-copy {
+        max-width: 42ch;
+        color: var(--muted);
+      }
+
+      .button {
+        display: inline-block;
+        width: 142px;
+        height: 32px;
+        margin-top: 8px;
+        border-radius: 999px;
+        background: var(--ink);
+      }
+
+      .illustration {
+        display: grid;
+        min-height: 210px;
+        place-items: center;
+        border: 1px solid var(--line);
+        background: repeating-linear-gradient(
+          -45deg,
+          var(--box),
+          var(--box) 10px,
+          var(--paper) 10px,
+          var(--paper) 20px
+        );
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-align: center;
+      }
+
+      .section-title {
+        max-width: 25ch;
+        margin: 0;
+        font: 500 1.8rem/1.15 var(--serif);
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .step {
+        min-height: 130px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        background: var(--box);
+      }
+
+      .step strong {
+        display: block;
+        margin-top: 24px;
+        font: 500 1rem var(--serif);
+      }
+
+      .step span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .principle {
+        min-height: 160px;
+        background: var(--box);
+      }
+
+      .principle p {
+        max-width: 31ch;
+        margin: 14px 0 0;
+        font: 500 1.55rem/1.2 var(--serif);
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      aside {
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .note {
+        display: grid;
+        gap: 4px;
+        padding: 12px 14px;
+        border: 1px solid var(--noteline);
+        border-radius: 6px;
+        background: var(--note);
+        font-size: 0.9rem;
+      }
+
+      .note h3 {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 0;
+        font-size: 0.92rem;
+      }
+
+      .note .pin {
+        position: static;
+        flex: 0 0 auto;
+      }
+
+      .note p {
+        margin: 0;
+      }
+
+      .note code {
+        padding: 0 0.3rem;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        background: var(--paper);
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 860px) {
+        .cols {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .hero,
+        .steps {
+          grid-template-columns: 1fr;
+        }
+
+        .hero h2 {
+          max-width: 15ch;
+        }
+
+        .illustration {
+          min-height: 150px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <h1>Sagas landing page wireframe</h1>
+        <p>
+          A grey-box layout for review before implementation. It explains why
+          Sagas exists, where the project stands, and how the idea works. It
+          does not choose final type, colour, or illustration.
+        </p>
+      </header>
+
+      <div class="cols">
+        <main class="page" aria-label="Landing page wireframe">
+          <div class="draft">
+            Draft — examples on this page are invented and the copy is not
+            approved for public release
+          </div>
+
+          <section class="region nav">
+            <span class="pin">1</span>
+            <div class="wordmark">Sagas</div>
+            <a class="nav-link" href="#how-it-works" aria-label="Go to how it works">How it works</a>
+          </section>
+
+          <section class="region hero">
+            <span class="pin">2</span>
+            <div>
+              <div class="eyebrow">Stories kept with places</div>
+              <h2>Every place has more than one story.</h2>
+              <p class="hero-copy">
+                Buildings outlast the people who remember them. Sagas keeps
+                those stories with the places, like a digital plaque, so
+                someone who comes looking later can still find them.
+              </p>
+              <a class="button" href="#why-sagas">Why Sagas exists</a>
+            </div>
+            <div class="illustration" aria-label="Corner shop, an illustrative example invented for this draft">
+              <strong>Corner shop</strong><br />
+              Illustrative worked example<br />- invented for this draft
+            </div>
+          </section>
+
+          <section class="region" id="why-sagas">
+            <span class="pin">3</span>
+            <div class="label">Why Sagas exists</div>
+            <h2 class="section-title">When people move on, stories can disappear with them.</h2>
+            <p class="hero-copy">
+              Sagas keeps the memories connected to a place, so a person who
+              comes looking later can still find them. Every story stays
+              visible with the records and sources that help someone understand
+              where it came from.
+            </p>
+          </section>
+
+          <section class="region" id="how-it-works">
+            <span class="pin">4</span>
+            <div class="label">How it works</div>
+            <h2 class="section-title">Read the story. Then see what stays visible beside it.</h2>
+            <div class="steps">
+              <div class="step">
+                <div class="label">01</div>
+                <strong>Start with a place</strong>
+                <span>Find somewhere and begin with what is already known.</span>
+              </div>
+              <div class="step">
+                <div class="label">02</div>
+                <strong>Read the story</strong>
+                <span>See what people have remembered, with its context.</span>
+              </div>
+              <div class="step">
+                <div class="label">03</div>
+                <strong>Look closer</strong>
+                <span>Follow a phrase back to records and sources.</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="region principle">
+            <span class="pin">5</span>
+            <div class="label">The principle</div>
+            <p>
+              Different stories stay visible. Each one leads back to the
+              records and sources behind it.
+            </p>
+          </section>
+
+          <section class="region">
+            <span class="pin">6</span>
+            <div class="label">Where Sagas stands</div>
+            <h2 class="section-title">This is an early project, and the site is not open yet.</h2>
+            <p class="hero-copy">
+              Sagas is being built by student teams at Idaho universities. We
+              are sharing the idea and the work in progress while we learn from
+              the people who remember these places.
+            </p>
+            <p class="hero-copy">
+              Questions or thoughts? Write to
+              <a href="mailto:info@civum.io">info@civum.io</a>.
+            </p>
+          </section>
+
+          <footer class="region footer">
+            <strong>Sagas</strong>
+            <span>Early project - not open yet</span>
+          </footer>
+        </main>
+
+        <aside aria-label="Wireframe annotations">
+          <div class="note">
+            <h3><span class="pin">1</span>Identity and orientation</h3>
+            <p>
+              The wordmark establishes the project without naming an
+              organisation. Navigation stays intentionally small and points to
+              the explanation on this page.
+            </p>
+          </div>
+          <div class="note">
+            <h3><span class="pin">2</span>Hero and first action</h3>
+            <p>
+              The headline states the central idea. Supporting copy explains
+              why Sagas exists in language a neighbour or archivist can use.
+              The corner shop is a worked example and is marked invented.
+            </p>
+          </div>
+          <div class="note">
+            <h3><span class="pin">3</span>Product explanation</h3>
+            <p>
+              Three steps make the idea understandable before the site is
+              available. This section should remain useful without a map,
+              sign-up form, scores, or counts.
+            </p>
+          </div>
+          <div class="note">
+            <h3><span class="pin">4</span>Trust principle</h3>
+            <p>
+              Different stories stay visible and lead back to their sources.
+              The final wording needs sponsor approval before deployment.
+            </p>
+          </div>
+          <div class="note">
+            <h3>Out of scope for this version</h3>
+            <p>
+              No organisation name, real testimony, scores, counts, mailing
+              list, analytics, changelog, authentication, or implication that
+              the site is open for use.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </body>
+</html>
+
