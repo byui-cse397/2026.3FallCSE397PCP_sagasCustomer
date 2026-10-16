@@ -6,7 +6,7 @@
 
 This copy is for the local landing-page wireframe in
 [`landing-page-wireframe.html`](./landing-page-wireframe.html). It explains the
-idea before the site exists publicly and names no organisation.
+idea before the product exists publicly and names no organisation.
 
 ## Draft page
 
