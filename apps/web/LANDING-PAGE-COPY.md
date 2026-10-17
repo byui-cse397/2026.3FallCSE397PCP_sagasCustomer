@@ -6,7 +6,7 @@
 
 This copy is for the local landing-page wireframe in
 [`landing-page-wireframe.html`](./landing-page-wireframe.html). It explains the
-idea before the product exists publicly and names no organisation.
+idea before the site exists publicly and names no organisation.
 
 ## Draft page
 
@@ -114,7 +114,7 @@ be mistaken for real testimony.
 **Status text:** Early project - not open yet
 
 The footer should not name an organisation, imply sponsorship, or suggest that
-the product is ready for public contribution.
+the site is ready for public contribution.
 
 ## What is out of scope for this version
 
