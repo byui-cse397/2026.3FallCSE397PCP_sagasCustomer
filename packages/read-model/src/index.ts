@@ -24,16 +24,16 @@ export type FixtureStateId = 't0' | 't1' | 't2' | 't3';
 
 export const FIXTURE_STATES: FixtureStateId[] = ['t0', 't1', 't2', 't3'];
 
-type ReadModelRow = {
+interface ReadModelRow {
   slug: string;
   state_id: FixtureStateId;
   site: Site;
   graph_state: GraphState;
-};
+}
 
 const pool = new Pool({
   connectionString:
-    process.env.SAGAS_EXPERIENCE_DATABASE_URL ??
+    process.env.DATABASE_URL ??
     'postgresql://sagas:sagas@127.0.0.1:5435/sagas_read',
 });
 
@@ -47,7 +47,8 @@ await pool.end();
 
 const statesBySlug = new Map<string, Map<FixtureStateId, ReadModelRow>>();
 for (const row of rows.rows) {
-  const states = statesBySlug.get(row.slug) ?? new Map();
+  const states =
+    statesBySlug.get(row.slug) ?? new Map<FixtureStateId, ReadModelRow>();
   states.set(row.state_id, row);
   statesBySlug.set(row.slug, states);
 }

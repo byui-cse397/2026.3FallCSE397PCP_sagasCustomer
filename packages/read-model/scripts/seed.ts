@@ -3,7 +3,7 @@ import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString:
-    process.env.SAGAS_EXPERIENCE_DATABASE_URL ??
+    process.env.DATABASE_URL ??
     'postgresql://sagas:sagas@127.0.0.1:5435/sagas_read',
 });
 
