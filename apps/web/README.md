@@ -22,8 +22,13 @@ interface has to survive.
 ```bash
 pnpm install
 cp .env.example .env      # add your own Mapbox token, or don't. See below.
+pnpm --filter @sagas/ui-api db:up
+pnpm --filter @sagas/ui-api db:seed
 pnpm dev:web
 ```
+
+The web app reads from the Experience Postgres database during startup, so the
+database must be running and seeded before `pnpm dev:web`.
 
 Two routes exist:
 

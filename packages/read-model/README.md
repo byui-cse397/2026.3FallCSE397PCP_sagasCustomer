@@ -9,7 +9,11 @@ and no chance of the page and the API disagreeing about what a site is.
 
 ## What it is today
 
-Two functions, `listSites` and `getSiteState`, read fixture JSON off disk.
+Two functions, `listSites` and `getSiteState`, read the experience read model
+from Postgres. Start the local database from `apps/ui-api`, then seed it with
+`pnpm --filter @sagas/ui-api db:seed`. The public functions keep their existing
+synchronous signatures: rows are loaded once when this package is initialised,
+so the web server and API callers do not change.
 
 ## What it becomes
 
@@ -21,6 +25,35 @@ try to be.
 Putting Postgres behind these functions is the first infrastructure job on this
 layer. Nothing that calls them changes when you do, which is the entire reason
 they are here rather than scattered through components.
+
+### Data-model note for Da1
+
+The first local schema is deliberately a read-model snapshot: one row per site
+and fixture state, with the contract-shaped `site` and `graph_state` values in
+JSONB.
+
+Stored in the local read model:
+
+- the site slug and fixture state id;
+- the fixture's site position for stable map/list ordering;
+- the map-facing site object; and
+- the graph state needed to render the article.
+
+Selected per request/module load:
+
+- which state is requested (`t0`–`t3`);
+- which site rows belong in `listSites()`; and
+- which graph-state row matches the requested site slug.
+
+This Da1 proposal uses snapshots rather than events. The experience database is
+a projection for reads, so snapshots keep map/article queries simple and let the
+read model be rebuilt from authoritative data later. It must not become a second
+authoritative history.
+
+Weight should remain on the calculated details/graph state supplied by the
+Intelligence layer, not be recomputed by this package. The read model stores the
+calculated graph state as received and only selects the requested snapshot; it
+does not introduce a scoring algorithm.
 
 Do it early. If the whole interface is built against a file and the database
 arrives in November, November is when you find out which components assumed data
