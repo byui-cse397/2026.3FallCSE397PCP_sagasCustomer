@@ -1,8 +1,8 @@
 # Sagas landing page copy
 
-**Status:** Draft for sponsor approval  
+**Status:** Approved by the sponsor on 19 October 2026 ([his comment in #11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11#issuecomment-6278318879))  
 **Audience:** People who remember a place, community leaders, and archivists
-**Public release:** Not approved; the site is not open yet
+**Public release:** Approved for sagasproject.org; the product itself is not open yet
 
 This copy is for the local landing-page wireframe in
 [`landing-page-wireframe.html`](./landing-page-wireframe.html). It explains the
@@ -48,7 +48,7 @@ The link scrolls to the explanation section on this page.
 
 **Worked example**
 
-> Corner shop - illustrative worked example - invented for this draft
+> Corner shop - Illustrative example, invented
 
 The corner shop is the invented worked example used throughout the project. It
 must be labelled beside any illustration, passage, person, or place that could
@@ -131,8 +131,7 @@ testimony must be marked beside that content. Labels must be visible text; do
 not rely on colour, italics, icons, hover text, tooltips, or the page-level
 banner alone.
 
-- **Illustrative worked example - invented for this draft** for the corner shop
-  or any sample place.
+- **Illustrative example, invented** for the corner shop or any sample place.
 - **Invented sample passage - not a real story** for a fabricated quotation or
   passage.
 - **Invented contributor - not a real person** for a fabricated contributor.
@@ -153,13 +152,13 @@ banner alone.
 
 ## Sponsor approval checklist
 
-- [ ] Approve the headline.
-- [ ] Approve the reason-for-existence copy.
-- [ ] Approve the corner-shop worked example and its invented label.
-- [ ] Approve the three-step explanation.
-- [ ] Approve the principle statement.
-- [ ] Approve the early-project and not-open-yet wording.
-- [ ] Confirm that the contact address is correct.
-- [ ] Confirm whether the draft banner should be removed before release.
-- [ ] Confirm that no organisation name, score, count, or readiness signal has
+- [x] Approve the headline.
+- [x] Approve the reason-for-existence copy.
+- [x] Approve the corner-shop worked example and its invented label.
+- [x] Approve the three-step explanation.
+- [x] Approve the principle statement.
+- [x] Approve the early-project and not-open-yet wording.
+- [x] Confirm that the contact address is correct.
+- [x] Confirm whether the draft banner should be removed before release.
+- [x] Confirm that no organisation name, score, count, or readiness signal has
       slipped into the page.
