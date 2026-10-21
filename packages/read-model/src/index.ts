@@ -27,6 +27,7 @@ export const FIXTURE_STATES: FixtureStateId[] = ['t0', 't1', 't2', 't3'];
 interface ReadModelRow {
   slug: string;
   state_id: FixtureStateId;
+  position: number;
   site: Site;
   graph_state: GraphState;
 }
@@ -37,11 +38,20 @@ const pool = new Pool({
     'postgresql://sagas:sagas@127.0.0.1:5435/sagas_read',
 });
 
-const rows = await pool.query<ReadModelRow>(
-  `SELECT slug, state_id, site, graph_state
+let rows;
+try {
+  rows = await pool.query<ReadModelRow>(
+    `SELECT slug, state_id, position, site, graph_state
    FROM experience_read_model
-   ORDER BY slug, state_id`,
-);
+   ORDER BY position, state_id`,
+  );
+} catch (error) {
+  await pool.end();
+  throw new Error(
+    'Experience database not reachable. Run pnpm --filter @sagas/ui-api db:up then pnpm --filter @sagas/ui-api db:seed',
+    { cause: error },
+  );
+}
 
 await pool.end();
 

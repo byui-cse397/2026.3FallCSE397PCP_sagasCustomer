@@ -22,11 +22,3 @@ CREATE TABLE IF NOT EXISTS scaffold_init (
 INSERT INTO scaffold_init (note)
 VALUES ('Scaffold init ran on sagas_read. Extensions enabled. No application tables, those are yours.')
 ON CONFLICT (id) DO NOTHING;
-
-CREATE TABLE IF NOT EXISTS experience_read_model (
-  slug        text NOT NULL,
-  state_id    text NOT NULL CHECK (state_id IN ('t0', 't1', 't2', 't3')),
-  site        jsonb NOT NULL,
-  graph_state jsonb NOT NULL,
-  PRIMARY KEY (slug, state_id)
-);
