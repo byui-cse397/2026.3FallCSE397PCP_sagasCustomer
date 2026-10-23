@@ -27,6 +27,8 @@
  * So there is no red, and no empty progress bar sitting next to a full one.
  * A colour scale from red to green would tell a contributor that what their
  * family just added is failing, when the record is only early.
+ * The brief also forbids showing scores or counts, which could make a place
+ * feel graded or turn agreement into an apparent vote tally.
  *
  * Acceptance criterion: sparse-site-is-not-empty-site.
  *
