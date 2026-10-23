@@ -10,10 +10,39 @@ and no chance of the page and the API disagreeing about what a site is.
 ## What it is today
 
 Two functions, `listSites` and `getSiteState`, read the experience read model
-from Postgres. Start the local database from `apps/ui-api`, then seed it with
-`pnpm --filter @sagas/ui-api db:seed`. The public functions keep their existing
-synchronous signatures: rows are loaded once when this package is initialised,
-so the web server and API callers do not change.
+from Postgres: one table, `experience_read_model`, with one row per site per
+fixture state (`t0` to `t3`). The table is created by
+`apps/ui-api/docker/init/02-read-model.sql` on a new Docker volume, and by the
+seed on any other database.
+
+The rows are loaded once, when the server starts, and kept in memory. That keeps
+the functions synchronous for their callers, and it has four consequences:
+
+- **The server needs the database to start.** Without it, the page fails with
+  the setup commands below.
+- **After seeding, restart the server.** A running `pnpm dev:web` keeps the
+  rows it loaded at start-up.
+- **`next build` needs the database too,** because the home page is rendered
+  during the build.
+- **In a production build, a re-seed needs a rebuild and a restart.** The home
+  page keeps the data it was built with until `next build` runs again, and the
+  other pages and API routes keep the rows loaded when `next start` began.
+
+## Running it locally
+
+Once, after cloning or after this lands on `main`, with Docker Desktop running:
+
+```sh
+pnpm --filter @sagas/ui-api db:up      # Postgres + PostGIS on 127.0.0.1:5435
+pnpm --filter @sagas/ui-api db:seed    # load the fixtures into the read model
+pnpm dev:web                           # restart it if it was already running
+```
+
+Run `db:seed` again after every upstream contract sync, then restart
+`dev:web`. The seed empties the table and reloads it inside one transaction, so
+it is safe to run as often as you like and leaves exactly the current fixtures.
+
+To seed another database, such as a hosted one, set `DATABASE_URL` for that run.
 
 ## What it becomes
 
@@ -22,42 +51,14 @@ does, which are drawing a map and rendering an article. That is not the same
 shape as the authoritative store the intelligence layer keeps, and it should not
 try to be.
 
-Putting Postgres behind these functions is the first infrastructure job on this
-layer. Nothing that calls them changes when you do, which is the entire reason
-they are here rather than scattered through components.
+Postgres went behind these functions first (story Da1), and nothing that calls
+them had to change, which is the entire reason they are here rather than
+scattered through components.
 
-### Data-model note for Da1
-
-The first local schema is deliberately a read-model snapshot: one row per site
-and fixture state, with the contract-shaped `site` and `graph_state` values in
-JSONB.
-
-Stored in the local read model:
-
-- the site slug and fixture state id;
-- the fixture's site position for stable map/list ordering;
-- the map-facing site object; and
-- the graph state needed to render the article.
-
-Selected per request/module load:
-
-- which state is requested (`t0`–`t3`);
-- which site rows belong in `listSites()`; and
-- which graph-state row matches the requested site slug.
-
-This Da1 proposal uses snapshots rather than events. The experience database is
-a projection for reads, so snapshots keep map/article queries simple and let the
-read model be rebuilt from authoritative data later. It must not become a second
-authoritative history.
-
-Weight should remain on the calculated details/graph state supplied by the
-Intelligence layer, not be recomputed by this package. The read model stores the
-calculated graph state as received and only selects the requested snapshot; it
-does not introduce a scoring algorithm.
-
-Do it early. If the whole interface is built against a file and the database
-arrives in November, November is when you find out which components assumed data
-was free to fetch.
+What is still to come: a schema shaped for the map and the article rather than
+one row of JSON per state, spatial indexing so "everything within 2km of here"
+is fast enough to drive a map, and deciding what is held in memory versus
+fetched per request.
 
 ## Things that will bite
 

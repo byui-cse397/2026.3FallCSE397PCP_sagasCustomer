@@ -31,6 +31,8 @@ try {
   await client.query(
     'ALTER TABLE experience_read_model ADD COLUMN IF NOT EXISTS position integer NOT NULL DEFAULT 0',
   );
+  // Start from empty so sites or states removed from the fixtures disappear.
+  await client.query('DELETE FROM experience_read_model');
   for (const { position, stateId, state } of states) {
     await client.query(
       `INSERT INTO experience_read_model (slug, state_id, position, site, graph_state)
