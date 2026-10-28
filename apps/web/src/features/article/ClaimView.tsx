@@ -11,10 +11,17 @@ import { TranslationPanel } from './TranslationPanel';
  * disagree, how it's been rendered, and who said it. Replace the pieces one at
  * a time.
  */
-export function ClaimView({ claim }: { claim: ClaimState }) {
+export function ClaimView({ claim, detailIds }: { claim: ClaimState; detailIds?: string[] }) {
+  const text = claim.claim.awaitingTranslation ? claim.claim.sourceLanguageText : claim.claim.text;
+  const excerpts = detailIds?.flatMap((id) => {
+    const excerpt = claim.claim.details.find((detail) => detail.id === id)?.excerpt;
+    if (!excerpt) return [];
+    const start = text.indexOf(excerpt);
+    return start < 0 ? [] : [{ start, end: start + excerpt.length }];
+  }).sort((a, b) => a.start - b.start) ?? [];
   return (
     <article>
-      <p>{claim.claim.awaitingTranslation ? claim.claim.sourceLanguageText : claim.claim.text}</p>
+      <p>{excerpts.length === 0 ? text : excerpts.map((part, index) => <span key={part.start}>{text.slice(index === 0 ? 0 : excerpts[index - 1].end, part.start)}<mark>{text.slice(part.start, part.end)}</mark>{index === excerpts.length - 1 ? text.slice(part.end) : null}</span>)}</p>
       <ConfidenceIndicator claim={claim} />
       <DetailDisputes claim={claim} />
       <TranslationPanel claim={claim} />

@@ -15,9 +15,9 @@ describe('ArticleView', () => {
   it('renders sections in state order with their headings and passages', () => {
     const page = renderArticle('t3');
     const shopHeading = page.indexOf('The shop on the corner');
-    const shopPassage = page.indexOf('The shop stood on the corner');
+    const shopPassage = page.indexOf('The shop stood');
     const signHeading = page.indexOf('The sign');
-    const signPassage = page.indexOf('A sign reading FERRIS GROCERY');
+    const signPassage = page.indexOf('FERRIS GROCERY');
 
     expect(shopHeading).toBeGreaterThanOrEqual(0);
     expect(shopPassage).toBeGreaterThan(shopHeading);
