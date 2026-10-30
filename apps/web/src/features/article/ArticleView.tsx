@@ -8,6 +8,7 @@ import type {
   SourceRecord,
 } from '@sagas/contracts';
 import { SiteHeader } from '../site/SiteHeader';
+import { PhraseClaims } from './PhraseClaims';
 
 /** Renders one section and the disputed readings named by its composition. */
 function NarrativeSection({
@@ -47,7 +48,7 @@ function NarrativeSection({
       </h2>
       {composition ? (
         <>
-          <p className="text-sm leading-relaxed">{composition.text}</p>
+          <PhraseClaims composition={composition} claims={claims} />
           {claimAuthors.size > 0 && (
             <p className="text-xs text-neutral-600">
               Based on claims by{' '}

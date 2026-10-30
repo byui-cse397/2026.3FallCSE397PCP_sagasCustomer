@@ -59,13 +59,16 @@ export default async function DevPage({
             </Link>
           ))}
         </nav>
-        <nav className="flex gap-2 text-sm">
+        <nav aria-label="Fixture history, oldest to newest" className="flex flex-wrap gap-2 text-sm">
           {FIXTURE_STATES.map((id) => (
             <Link
               key={id}
               href={`/dev?site=${slug}&state=${id}`}
+              aria-current={id === stateId ? 'page' : undefined}
               className={
-                id === stateId ? 'rounded border px-2 py-1 font-semibold' : 'rounded border px-2 py-1'
+                id === stateId
+                  ? 'rounded border border-neutral-900 px-2 py-1 font-semibold'
+                  : 'rounded border border-neutral-300 px-2 py-1 hover:border-neutral-700'
               }
             >
               {id}
@@ -73,6 +76,7 @@ export default async function DevPage({
           ))}
         </nav>
         <p className="text-sm text-neutral-600">
+          Viewing {stateId} ·{' '}
           {state.claims.length} claim(s) · integrity {state.integrity.overall}/100 ·{' '}
           {state.eventIdsApplied.length} contributions applied
         </p>
