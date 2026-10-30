@@ -6,7 +6,12 @@
 
 ## Design basis
 
-The components use the De1 token direction from `apps/landing/src/tokens.css`:
+The team adopts the current neutral values in `apps/landing/src/tokens.css` as
+the starting token set for De7. The source labels these values temporary while
+the shared De1 token work is completed; De7 should use the same names and remain
+ready for those values to be replaced centrally.
+
+The components use these starting tokens:
 
 - `--background` and `--foreground` for the page and primary text.
 - `--muted` and `--muted-foreground` for secondary surfaces and text.
@@ -23,7 +28,9 @@ keyboard and screen-reader users.
 ### 1. Map pin
 
 ```text
-  ●  ← site icon / place marker
+normal       selected        loading        empty map
+  ●            ◉              ···             No places yet
+site icon    focus ring       hidden          Try another area
 ```
 
 - **Normal:** location marker with a non-numeric site-type icon.
@@ -31,61 +38,98 @@ keyboard and screen-reader users.
   selected site in the list.
 - **Loading:** marker is withheld while its site data is loading; the list
   retains a labeled loading row.
+- **Empty:** no pin is rendered; the map/list region says “No places yet” and
+  offers a way to try another area.
 - **Disagreement:** not a pin state. Detail disagreement belongs on the site
   narrative, never as a pin score, color, or warning.
 
 ### 2. Site list item
 
 ```text
-┌──────────────────────────────┐
-│ site name                    │
-│ place type · short location  │
-└──────────────────────────────┘
+normal                         selected
+┌──────────────────────┐       ┌──────────────────────┐
+│ Corner shop          │       │▌ Corner shop         │
+│ shop · Main Street   │       │  shop · Main Street  │
+└──────────────────────┘       └──────────────────────┘
+
+loading                        empty
+┌──────────────────────┐       No places in this area.
+│ [loading site name]  │       Try another area.
+│ [loading context]    │
+└──────────────────────┘
 ```
 
 - **Normal:** site name, place context, and the same site icon as the map.
 - **Selected:** visible focus/selection treatment and map selection sync.
 - **Loading:** labeled skeleton or text state that does not imply failure.
-- **Long name:** wraps without truncating the identifying words.
+- **Empty:** the list says “No places in this area” and provides a next action;
+  it does not look like a failed request.
+- **Long name:** “The Community Hall and Former Market on North Main Street”
+  wraps to additional lines without truncating identifying words.
 
 ### 3. Narrative-page header
 
 ```text
-Site name
-place context · record status
+normal                         loading
+Site name                      [loading site name]
+place context · record status  [loading place context]
+
+long name                      empty
+The Community Hall and         No story is available for this place yet.
+Former Market on North Main    Return to places.
+Street · record status
 ```
 
 - **Normal:** site identity and place context.
 - **Loading:** labeled page-loading state.
-- **Long name:** wraps across lines while preserving the full name.
+- **Empty:** the header remains grounded in the selected place while the page
+  says no story is available yet.
+- **Long name:** the example wraps across lines while preserving the full name.
 - **Disagreement:** no header warning or score; disagreement appears beside
   the affected detail in the narrative.
 
 ### 4. Memory with source
 
 ```text
-Memory passage
-— contributor · source record
+normal                         loading
+Memory passage                 [loading memory passage]
+— Ana Rivera · source record  [loading attribution]
+
+long name                      empty
+Memory passage                 No memories are available for this place yet.
+— The North Main Street        Sources will appear with memories.
+Historical Society contributor
 ```
 
 - **Normal:** memory text, attribution, and source-record link.
 - **Loading:** labeled passage-loading state.
-- **Long name:** contributor and source labels wrap.
+- **Empty:** the page identifies the absence of memories without calling the
+  source record or thin data a failure.
+- **Long name:** the example wraps contributor and source labels.
 - **Disagreement:** the affected detail can open its competing readings;
   unrelated text remains unchanged.
 
 ### 5. Competing detail versions
 
 ```text
-Detail
-┌──────────────┐  ┌──────────────┐
+normal                              loading
+Detail                              [loading detail]
+┌──────────────┐  ┌──────────────┐  [loading sources]
 │ reading one  │  │ reading two  │
-│ contributor  │  │ contributor  │
-└──────────────┘  └──────────────┘
+│ source A     │  │ source B     │  empty
+└──────────────┘  └──────────────┘  No details have been added yet.
+
+long name
+┌────────────────────────┐  ┌────────────────────────┐
+│ The first detailed     │  │ A different detailed   │
+│ reading of this place  │  │ reading of this place  │
+└────────────────────────┘  └────────────────────────┘
 ```
 
 - **Normal:** equal-prominence readings with attribution and source links.
 - **Loading:** labeled detail-loading state.
+- **Empty:** the section says no details have been added and does not invent a
+  reading or source.
 - **Long name:** readings remain readable and expand vertically.
 - **Disagreement:** this is the disagreement state; no winner, tally, score,
   or settled label is shown.
@@ -93,13 +137,21 @@ Detail
 ### 6. Record with contributor
 
 ```text
-Record title or media
-Brought by contributor · collection/source context
+normal                         loading
+Record title or media          [loading record]
+Brought by contributor         [loading attribution]
+
+long name                      empty
+Record title from the          No source records are attached yet.
+Community Historical Society   The memory remains attributed.
+collection
 ```
 
 - **Normal:** record, contributor, and source context.
 - **Loading:** labeled record-loading state.
-- **Long name:** contributor and collection names wrap.
+- **Empty:** the memory remains attributed while the record area says no source
+  records are attached yet; it does not imply the memory failed.
+- **Long name:** contributor and collection names wrap as shown.
 - **Disagreement:** records remain attributed; disagreement is shown on the
   affected detail rather than on the record as a whole.
 

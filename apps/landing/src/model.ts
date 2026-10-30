@@ -104,12 +104,14 @@ export interface DraftDesignStep {
   copy: TextSection;
 }
 
+export type DesignStep = ApprovedDesignStep | DraftDesignStep;
+
 /** Approval state for design work that may be newer than the shipped copy. */
 export interface DesignSteps {
   De2: ApprovedDesignStep;
-  De4: DraftDesignStep;
-  De5: DraftDesignStep;
-  De6: DraftDesignStep;
+  De4: DesignStep;
+  De5: DesignStep;
+  De6: DesignStep;
 }
 
 export type LandingContent =
