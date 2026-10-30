@@ -93,12 +93,12 @@ Street · record status
 ```text
 normal                         loading
 Memory passage                 [loading memory passage]
-— Ana Rivera · source record  [loading attribution]
+— Ana Rivera (invented)       [loading source record]
 
 long name                      empty
 Memory passage                 No memories are available for this place yet.
-— The North Main Street        Sources will appear with memories.
-Historical Society contributor
+— The North Main Street        No additional evidence records yet.
+Historical Society (invented)  The source record remains attributed.
 ```
 
 - **Normal:** memory text, attribution, and source-record link.
@@ -149,8 +149,12 @@ collection
 
 - **Normal:** record, contributor, and source context.
 - **Loading:** labeled record-loading state.
-- **Empty:** the memory remains attributed while the record area says no source
-  records are attached yet; it does not imply the memory failed.
+- **Empty:** the source record remains attributed while the record area says
+  “No additional evidence records yet.” Every memory has its source record;
+  additional evidence is optional.
+- **Unavailable source:** if the source record has not loaded, show
+  “[source record unavailable]” with the memory still clearly marked as
+  awaiting its source, rather than presenting an evidence-empty state.
 - **Long name:** contributor and collection names wrap as shown.
 - **Disagreement:** records remain attributed; disagreement is shown on the
   affected detail rather than on the record as a whole.

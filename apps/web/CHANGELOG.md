@@ -15,6 +15,7 @@ conflict on a later pull.
 
 - What works now, in a sentence a visitor would understand. (#pull request number, who)
 ```
+
 ## 2026-10-23
 
 - The corner shop page shows its sections, its records, and both readings of the disputed date side by side. (#31, Canon)
