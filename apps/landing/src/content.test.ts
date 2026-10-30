@@ -26,7 +26,8 @@ function allText(value: unknown): string[] {
  * agreed to be named. The rule for this release is to name none, and a person
  * reviews the copy before it is approved.
  */
-const KNOWN_ORGANISATIONS = [/\bcivum\b/i, /\bbyu\b/i, /brigham\s+young/i];
+const KNOWN_ORGANISATIONS = [/\bbyu\b/i, /brigham\s+young/i];
+const ALLOWED_ORGANISATIONS = ['Civum, Inc.'];
 
 /**
  * The one exception: the sponsor asked for this contact address on the page
@@ -37,9 +38,12 @@ const SPONSOR_CONTACT = 'info@civum.io';
 
 describe('landing page copy', () => {
   it('names no known organisation, apart from the sponsor contact address', () => {
-    const withoutContact = html.replaceAll(SPONSOR_CONTACT, '');
+    const withoutAllowed = [SPONSOR_CONTACT, ...ALLOWED_ORGANISATIONS].reduce(
+      (text, allowed) => text.replaceAll(allowed, ''),
+      html,
+    );
     for (const pattern of KNOWN_ORGANISATIONS) {
-      expect(withoutContact, `found ${pattern}`).not.toMatch(pattern);
+      expect(withoutAllowed, `found ${pattern}`).not.toMatch(pattern);
     }
   });
 
@@ -76,6 +80,17 @@ describe('landing page copy', () => {
 
   it('has three steps in how it works', () => {
     expect(copy.how.steps).toHaveLength(3);
+  });
+
+  it('tracks design-step approval separately from release approval', () => {
+    expect(content.status).toBe('approved');
+    expect(content.designSteps?.De2.status).toBe('approved');
+    expect(content.designSteps?.De4.status).toBe('draft');
+    expect(content.designSteps?.De5.status).toBe('draft');
+    expect(content.designSteps?.De6.status).toBe('draft');
+    expect(content.designSteps?.De4.copy.heading).toContain('archive');
+    expect(content.designSteps?.De5.copy.text).not.toMatch(/moderation|review/i);
+    expect(content.designSteps?.De6.copy.heading).toContain('Civum, Inc.');
   });
 
   if (content.status === 'draft') {

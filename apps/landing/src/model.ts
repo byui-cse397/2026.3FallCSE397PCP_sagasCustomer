@@ -93,6 +93,25 @@ export interface Approval {
   copySha256: string;
 }
 
+export interface ApprovedDesignStep {
+  status: 'approved';
+  approvedOn: string;
+  approvalLink: string;
+}
+
+export interface DraftDesignStep {
+  status: 'draft';
+  copy: TextSection;
+}
+
+/** Approval state for design work that may be newer than the shipped copy. */
+export interface DesignSteps {
+  De2: ApprovedDesignStep;
+  De4: DraftDesignStep;
+  De5: DraftDesignStep;
+  De6: DraftDesignStep;
+}
+
 export type LandingContent =
-  | { status: 'draft'; approval?: undefined; copy: PageCopy }
-  | { status: 'approved'; approval: Approval; copy: PageCopy };
+  | { status: 'draft'; approval?: undefined; copy: PageCopy; designSteps?: DesignSteps }
+  | { status: 'approved'; approval: Approval; copy: PageCopy; designSteps?: DesignSteps };
