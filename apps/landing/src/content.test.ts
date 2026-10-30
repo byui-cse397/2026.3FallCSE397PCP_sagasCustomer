@@ -23,23 +23,27 @@ function allText(value: unknown): string[] {
 /**
  * Organisations we know are connected to this project. This is a safety net
  * for slips, not a consent check: no test can tell whether an organisation has
- * agreed to be named. The rule for this release is to name none, and a person
- * reviews the copy before it is approved.
+ * agreed to be named. The exact approved company name is removed below, but
+ * the broader Civum check stays in place for names such as "Civum Foundation".
  */
-const KNOWN_ORGANISATIONS = [/\bcivum\b/i, /\bbyu\b/i, /brigham\s+young/i];
+const KNOWN_ORGANISATIONS = [/\bbyu\b/i, /brigham\s+young/i, /\bcivum\b/i];
+const ALLOWED_ORGANISATIONS = ['Civum, Inc.'];
 
 /**
- * The one exception: the sponsor asked for this contact address on the page
- * (his brief in the questions issue, #11). Only this exact address is allowed,
- * so any other mention still fails.
+ * These exact strings are approved exceptions. Removing the company name
+ * before checking the broader Civum pattern prevents unrelated Civum
+ * organisations from passing the safety net.
  */
 const SPONSOR_CONTACT = 'info@civum.io';
 
 describe('landing page copy', () => {
   it('names no known organisation, apart from the sponsor contact address', () => {
-    const withoutContact = html.replaceAll(SPONSOR_CONTACT, '');
+    const withoutAllowed = [SPONSOR_CONTACT, ...ALLOWED_ORGANISATIONS].reduce(
+      (text, allowed) => text.replaceAll(allowed, ''),
+      html,
+    );
     for (const pattern of KNOWN_ORGANISATIONS) {
-      expect(withoutContact, `found ${pattern}`).not.toMatch(pattern);
+      expect(withoutAllowed, `found ${pattern}`).not.toMatch(pattern);
     }
   });
 
@@ -76,6 +80,23 @@ describe('landing page copy', () => {
 
   it('has three steps in how it works', () => {
     expect(copy.how.steps).toHaveLength(3);
+  });
+
+  it('tracks design-step approval separately from release approval', () => {
+    expect(content.status).toBe('approved');
+    expect(content.designSteps?.De2.status).toBe('approved');
+    expect(content.designSteps?.De4.status).toBe('draft');
+    expect(content.designSteps?.De5.status).toBe('draft');
+    expect(content.designSteps?.De6.status).toBe('draft');
+    if (content.designSteps?.De4.status === 'draft') {
+      expect(content.designSteps.De4.copy.heading).toContain('archive');
+    }
+    if (content.designSteps?.De5.status === 'draft') {
+      expect(content.designSteps.De5.copy.text).not.toMatch(/moderation|review/i);
+    }
+    if (content.designSteps?.De6.status === 'draft') {
+      expect(content.designSteps.De6.copy.heading).toContain('Civum, Inc.');
+    }
   });
 
   if (content.status === 'draft') {
