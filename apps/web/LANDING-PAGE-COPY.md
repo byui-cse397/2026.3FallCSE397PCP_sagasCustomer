@@ -222,7 +222,7 @@ This describes intended direction and does not add a live feature claim.
 
 **Copy**
 
-> It is a map of community history: people share what they know about places, and others add to it,
+> Sagas is a map of community history: people share what they know about places, and others add to it,
 > question it, or bring evidence. It is free to read, and nothing people
 > contribute is sold.
 
