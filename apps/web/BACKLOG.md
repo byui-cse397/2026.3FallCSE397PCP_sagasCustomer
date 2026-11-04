@@ -168,7 +168,7 @@ working toward, used on the map and the list.
 
 ### N1 · The corner shop at t3 as a page (Canon)
 
-**Workstream:** Narrative page. **Status:**Complete.
+**Workstream:** Narrative page. **Status:** Ready.
 
 **Goal.** The site page from `PAGE-MODEL.md`, built in the app.
 
@@ -184,7 +184,7 @@ working toward, used on the map and the list.
 
 ### N2 · A phrase opens the claims behind it (Canon)
 
-**Workstream:** Narrative page. **Status:** Complete.
+**Workstream:** Narrative page. **Status:** Ready.
 
 **Goal.** Selecting a phrase in a passage shows the claims it rests on.
 
@@ -197,7 +197,7 @@ working toward, used on the map and the list.
 
 ### N3 · Step from t0 to t3 (Canon)
 
-**Workstream:** Narrative page. **Status:** Complete.
+**Workstream:** Narrative page. **Status:** Ready.
 
 **Goal.** Watch the page change as the site's history arrives.
 
