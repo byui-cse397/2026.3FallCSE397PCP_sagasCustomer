@@ -210,7 +210,7 @@ donation path.
 
 > Sagas is designed to keep each memory connected to its source. When people
 > remember something differently, the different versions stay visible with
-> their own sources. Contributors choose what is public.
+> their own sources. Contributors will choose what is public.
 
 This describes intended direction and does not add a live feature claim.
 
@@ -218,7 +218,7 @@ This describes intended direction and does not add a live feature claim.
 
 **Heading**
 
-> Sagas is an open source project run by Civum, Inc.
+> The core of Sagas is open source, and Civum, Inc. runs it.
 
 **Copy**
 

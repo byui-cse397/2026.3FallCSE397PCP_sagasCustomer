@@ -48,7 +48,7 @@ export const content: LandingContent = {
         id: 'care',
         label: 'How stories are looked after',
         heading: 'Memories stay visible as memories, with the sources behind them.',
-        text: 'Sagas is designed to keep each memory connected to its source. When people remember something differently, the different versions stay visible with their own sources. Contributors choose what is public.',
+        text: 'Sagas is designed to keep each memory connected to its source. When people remember something differently, the different versions stay visible with their own sources. Contributors will choose what is public.',
       },
     },
     De6: {
@@ -56,7 +56,7 @@ export const content: LandingContent = {
       copy: {
         id: 'ownership',
         label: 'Who runs the project',
-        heading: 'Sagas is an open source project run by Civum, Inc.',
+        heading: 'The core of Sagas is open source, and Civum, Inc. runs it.',
         text: 'Sagas is a map of community history: people share what they know about places, and others add to it, question it, or bring evidence. It is free to read, and nothing people contribute is sold.',
       },
     },
