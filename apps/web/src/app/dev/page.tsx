@@ -38,6 +38,9 @@ export default async function DevPage({
   const state = getSiteState(slug, stateId);
   const sites = listSites(stateId);
   const cases = ACCEPTANCE_CRITERIA.filter((c) => c.stateId === stateId && c.site === entry?.key);
+  const stateIndex = FIXTURE_STATES.indexOf(stateId);
+  const previousState = stateIndex > 0 ? FIXTURE_STATES[stateIndex - 1] : undefined;
+  const nextState = stateIndex < FIXTURE_STATES.length - 1 ? FIXTURE_STATES[stateIndex + 1] : undefined;
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 p-8 font-sans">
@@ -59,15 +62,19 @@ export default async function DevPage({
             </Link>
           ))}
         </nav>
-        <nav aria-label="Fixture history states" className="flex flex-wrap items-center gap-2 text-sm">
-          <Link
-            href={`/dev?site=${slug}&state=${FIXTURE_STATES[Math.max(0, FIXTURE_STATES.indexOf(stateId) - 1)]}`}
-            aria-disabled={stateId === FIXTURE_STATES[0]}
-            tabIndex={stateId === FIXTURE_STATES[0] ? -1 : undefined}
-            className="rounded border px-2 py-1"
-          >
-            Previous state
-          </Link>
+        <nav
+          aria-label="Fixture history, oldest to newest"
+          className="flex flex-wrap items-center gap-2 text-sm"
+        >
+          {previousState ? (
+            <Link href={`/dev?site=${slug}&state=${previousState}`} className="rounded border px-2 py-1">
+              Previous state
+            </Link>
+          ) : (
+            <span aria-disabled="true" className="rounded border px-2 py-1 text-neutral-500">
+              Previous state
+            </span>
+          )}
           {FIXTURE_STATES.map((id) => (
             <Link
               key={id}
@@ -82,14 +89,16 @@ export default async function DevPage({
               {id}
             </Link>
           ))}
-          <Link
-            href={`/dev?site=${slug}&state=${FIXTURE_STATES[Math.min(FIXTURE_STATES.length - 1, FIXTURE_STATES.indexOf(stateId) + 1)]}`}
-            aria-disabled={stateId === FIXTURE_STATES[FIXTURE_STATES.length - 1]}
-            tabIndex={stateId === FIXTURE_STATES[FIXTURE_STATES.length - 1] ? -1 : undefined}
-            className="rounded border px-2 py-1"
-          >
-            Next state
-          </Link>
+          {nextState ? (
+            <Link href={`/dev?site=${slug}&state=${nextState}`} className="rounded border px-2 py-1">
+              Next state
+            </Link>
+          ) : (
+            <span aria-disabled="true" className="rounded border px-2 py-1 text-neutral-500">
+              Next state
+            </span>
+          )}
+          <span aria-live="polite">Viewing {stateId}</span>
         </nav>
         <p className="text-sm text-neutral-600">
           {state.claims.length} claim(s) · integrity {state.integrity.overall}/100 ·{' '}
