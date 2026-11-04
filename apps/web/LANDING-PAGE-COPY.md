@@ -4,6 +4,13 @@
 **Audience:** People who remember a place, community leaders, and archivists
 **Public release:** Approved for sagasproject.org; the product itself is not open yet
 
+**Design-step status:** De4 through De6 are approved design passages, but they
+are not part of the approved page copy. Publishing them is a follow-up requiring
+a new `PageCopy` update, copy hash, approval record, and changelog entry.
+
+**Review route:** De4–De6 approval is recorded in [Questions for the sponsor](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11#issuecomment-6572631996).
+De7 is reviewed by the Experience team in its separate design document.
+
 This copy is for the local landing-page wireframe in
 [`landing-page-wireframe.html`](./landing-page-wireframe.html). It explains the
 idea before the site exists publicly and names no organisation.
@@ -162,3 +169,62 @@ banner alone.
 - [x] Confirm whether the draft banner should be removed before release.
 - [x] Confirm that no organisation name, score, count, or readiness signal has
       slipped into the page.
+
+## Design-step status and approval history
+
+These additions are tracked separately from the approved landing-page copy.
+Changing a design-step status does not change the release status above.
+
+| Step | Status | Approval history |
+| --- | --- | --- |
+| De2 | Approved | Sponsor approval recorded on 19 October 2026 in [Issue #11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11#issuecomment-6278318879). |
+| De4 | Approved design passage | Sponsor approval recorded on 2 November 2026 in [Issue #11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11#issuecomment-6572631996); publication follow-up pending. |
+| De5 | Approved design passage | Sponsor approval recorded on 2 November 2026 in [Issue #11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11#issuecomment-6572631996); publication follow-up pending. |
+| De6 | Approved design passage | Sponsor approval recorded on 2 November 2026 in [Issue #11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11#issuecomment-6572631996); publication follow-up pending. |
+| De7 | Draft | Component design moved to [`DE7-COMPONENT-DESIGN.md`](./DE7-COMPONENT-DESIGN.md); team review pending. |
+
+### De4 approved design passage — Where a story belongs
+
+**Heading**
+
+> Sagas helps a story stay connected to a place, while an archive can keep it
+> permanently.
+
+**Copy**
+
+> Sagas is built around places, so it can turn up the people, records, and
+> leads connected to a story. If you want material kept permanently, an archive
+> may be the right place to donate it. We plan for contributors to choose what
+> stays public and to be able to take something out of public view.
+
+This is planned product behavior. It does not name an archive or provide a
+donation path.
+
+### De5 approved design passage — How stories are looked after
+
+**Heading**
+
+> Memories stay visible as memories, with the sources behind them.
+
+**Copy**
+
+> Sagas is designed to keep each memory connected to its source. When people
+> remember something differently, the different versions stay visible with
+> their own sources. Contributors will choose what is public.
+
+This describes intended direction and does not add a live feature claim.
+
+### De6 approved design passage — Who runs the project
+
+**Heading**
+
+> The core of Sagas is open source, and Civum, Inc. runs it.
+
+**Copy**
+
+> Sagas is a map of community history: people share what they know about places, and others add to it,
+> question it, or bring evidence. It is free to read, and nothing people
+> contribute is sold.
+
+This passage is sponsor-approved but requires a separate publication change
+before it is added to the approved page copy.
