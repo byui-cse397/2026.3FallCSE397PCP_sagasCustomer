@@ -34,8 +34,8 @@ second part happened.
 ### Touch targets and orientation
 
 - The primary “Why Sagas exists” action has a padded target suitable for touch.
-- The navigation link and primary action should remain visibly separate from
-  surrounding text at phone widths.
+- The navigation link now uses an inline-flex layout with a minimum 44px height;
+  its label remains visibly separate from surrounding text at phone widths.
 - The skip link provides keyboard orientation before the page content.
 - The map/list direction in De7 keeps the list available as the readable route
   for people who cannot use a map.
@@ -46,8 +46,11 @@ second part happened.
   example label.
 - Kept De7's long-name examples as wrapping layouts rather than ellipses.
 - Kept source and contributor labels explicit in the De7 sketches.
-- **Pending implementation review:** verify the navigation link's touch target
-  on a physical phone and adjust its padding if it is difficult to tap.
+- The navigation link's touch target was increased to the 44px starting target
+  recommended for this older-reader review. The physical-phone check remains
+  part of the external usability session.
+- De7 uses the same tested token names; map-pin and site-list tap sizes will be
+  checked when M1 implements those components.
 
 ## External usability session
 

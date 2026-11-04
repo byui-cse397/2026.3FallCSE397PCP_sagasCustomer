@@ -1,7 +1,7 @@
 # 0002 · The full app opens on the map
 
 **Date:** 3 November 2026 · **Workstream:** Design · **Story:** De10
-**Status:** Proposed; team review pending
+**Status:** Proposed; team review pending. Sam should review this entry-screen decision.
 
 ## Decision
 
@@ -12,6 +12,10 @@ The first screen should include a short orientation sentence, a clear place
 search or map-area action, and the list view alongside or available immediately
 below the map. The list is a first-class reading path, not a fallback for people
 who cannot use the map.
+
+The first screen depends on M1 (map and list). M2 (search by name and map area)
+is later work that should extend the same entry screen rather than introduce a
+separate home page.
 
 ## Why
 
@@ -46,6 +50,9 @@ reader. The proposed orientation sentence and explicit list avoid that problem.
 - Place, record, claim, detail, and contributor labels follow the project
   vocabulary.
 - This is a design decision, not an implementation claim.
+- The orientation sentence is public copy. It requires sponsor approval before
+  it is added to the landing page or other public entry point, under the
+  statement of work's sponsor-approval rule.
 
 ## Review status
 

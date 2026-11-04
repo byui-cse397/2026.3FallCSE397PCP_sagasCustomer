@@ -22,8 +22,9 @@ make an unreleased product look live, so this file records the draft only.
 
 Supporting text:
 
-> The full reading app is still a preview. Open it to explore the map and
-> place-based stories while the team continues building it.
+> The full reading app is still a preview, and the places and stories in it are
+> invented examples. Open it to explore the map while the team keeps building
+> it.
 
 The final URL must be supplied by P6/P7. The copy must continue to identify the
 destination as a preview until the sponsor approves a different release state.
