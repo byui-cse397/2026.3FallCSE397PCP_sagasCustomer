@@ -182,7 +182,7 @@ export function ArticleView({ state }: { state: GraphState }) {
         <div className="space-y-6">
           {state.sections.map((section) => (
             <NarrativeSection
-              key={section.id}
+              key={`${state.stateId}:${section.id}`}
               section={section}
               composition={compositions.get(section.id)}
               claims={claims}

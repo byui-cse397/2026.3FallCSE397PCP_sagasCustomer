@@ -59,7 +59,15 @@ export default async function DevPage({
             </Link>
           ))}
         </nav>
-        <nav aria-label="Fixture history, oldest to newest" className="flex flex-wrap gap-2 text-sm">
+        <nav aria-label="Fixture history states" className="flex flex-wrap items-center gap-2 text-sm">
+          <Link
+            href={`/dev?site=${slug}&state=${FIXTURE_STATES[Math.max(0, FIXTURE_STATES.indexOf(stateId) - 1)]}`}
+            aria-disabled={stateId === FIXTURE_STATES[0]}
+            tabIndex={stateId === FIXTURE_STATES[0] ? -1 : undefined}
+            className="rounded border px-2 py-1"
+          >
+            Previous state
+          </Link>
           {FIXTURE_STATES.map((id) => (
             <Link
               key={id}
@@ -67,16 +75,23 @@ export default async function DevPage({
               aria-current={id === stateId ? 'page' : undefined}
               className={
                 id === stateId
-                  ? 'rounded border border-neutral-900 px-2 py-1 font-semibold'
-                  : 'rounded border border-neutral-300 px-2 py-1 hover:border-neutral-700'
+                  ? 'rounded border border-neutral-900 px-2 py-1 font-semibold underline'
+                  : 'rounded border px-2 py-1'
               }
             >
               {id}
             </Link>
           ))}
+          <Link
+            href={`/dev?site=${slug}&state=${FIXTURE_STATES[Math.min(FIXTURE_STATES.length - 1, FIXTURE_STATES.indexOf(stateId) + 1)]}`}
+            aria-disabled={stateId === FIXTURE_STATES[FIXTURE_STATES.length - 1]}
+            tabIndex={stateId === FIXTURE_STATES[FIXTURE_STATES.length - 1] ? -1 : undefined}
+            className="rounded border px-2 py-1"
+          >
+            Next state
+          </Link>
         </nav>
         <p className="text-sm text-neutral-600">
-          Viewing {stateId} ·{' '}
           {state.claims.length} claim(s) · integrity {state.integrity.overall}/100 ·{' '}
           {state.eventIdsApplied.length} contributions applied
         </p>

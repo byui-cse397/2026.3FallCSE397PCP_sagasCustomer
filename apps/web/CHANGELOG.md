@@ -18,7 +18,8 @@ conflict on a later pull.
 
 ## 2026-10-28
 
-- The `/dev` fixture history control marks the selected state and lets you step through t0 to t3 while the page updates. (Canon)
+- Selecting an underlined phrase in a corner shop passage shows the claims behind it, strongest first, with extensions under the claim they add to and the phrase's words highlighted. (#33, Canon)
+- The `/dev` fixture history control marks the selected state and lets you step through t0 to t3 while the page updates. (#33, Canon)
 
 ## 2026-10-23
 
