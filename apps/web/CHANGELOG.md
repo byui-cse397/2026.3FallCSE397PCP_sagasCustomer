@@ -18,7 +18,12 @@ conflict on a later pull.
 
 ## 2026-11-03
 
-- The landing page gives its "How it works" link a larger touch target, while the team records the map and narrative component designs, older-reader review, full-app preview plan, and map-first entry decision. (#47, Michael)
+- The landing page’s “How it works” link is taller and easier to tap on a phone. (#47, Michael)
+
+## 2026-10-28
+
+- Selecting an underlined phrase in a corner shop passage shows the claims behind it, strongest first, with extensions under the claim they add to and the phrase's words highlighted. (#33, Canon)
+- The `/dev` fixture history control marks the selected state and lets you step through t0 to t3 while the page updates. (#33, Canon)
 
 ## 2026-10-23
 
