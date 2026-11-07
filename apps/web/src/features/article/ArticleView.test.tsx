@@ -14,10 +14,11 @@ function renderArticle(stateId: 't0' | 't1' | 't2' | 't3', records?: GraphState[
 describe('ArticleView', () => {
   it('renders sections in state order with their headings and passages', () => {
     const page = renderArticle('t3');
-    const shopHeading = page.indexOf('The shop on the corner');
-    const shopPassage = page.indexOf('The shop stood on the corner');
-    const signHeading = page.indexOf('The sign');
-    const signPassage = page.indexOf('A sign reading FERRIS GROCERY');
+    const readablePage = page.replace(/<[^>]*>/g, '');
+    const shopHeading = readablePage.indexOf('The shop on the corner');
+    const shopPassage = readablePage.indexOf('The shop stood on the corner');
+    const signHeading = readablePage.indexOf('The sign');
+    const signPassage = readablePage.indexOf('A sign reading FERRIS GROCERY');
 
     expect(shopHeading).toBeGreaterThanOrEqual(0);
     expect(shopPassage).toBeGreaterThan(shopHeading);
@@ -28,7 +29,8 @@ describe('ArticleView', () => {
   it('shows both disputed date readings with attribution and the supplied reasoning', () => {
     const page = renderArticle('t2');
 
-    expect(page).toContain('c. 1950');
+    // Contract 2.6.0: the first reading is the claim's own words, not a normalized value.
+    expect(page).toContain('Different readings of “around 1950”');
     expect(page).toContain('1956 or later');
     expect(page).toContain('Ray Okafor (invented)');
     expect(page).toContain('Owen Pike (invented)');

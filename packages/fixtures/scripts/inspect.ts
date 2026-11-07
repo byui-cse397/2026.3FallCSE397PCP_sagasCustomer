@@ -27,7 +27,7 @@ const state: GraphState = loadSiteState(siteKey, stateId);
 
 function one(c: ClaimState) {
   console.log('\n' + '='.repeat(72));
-  console.log(`${c.claim.id}   ${state.stateId}`);
+  console.log(`${c.claim.id}   ${stateId}`);
   console.log('='.repeat(72));
   console.log(`  ${c.contributor.displayName}${c.contributor.fictional ? '  (invented)' : ''}`);
   const text = c.claim.awaitingTranslation ? c.claim.sourceLanguageText : c.claim.text;
@@ -39,8 +39,7 @@ function one(c: ClaimState) {
   }
   console.log('\n  DETAILS');
   for (const d of c.score.details) {
-    const status = c.detailStatuses.find((s) => s.detail.id === d.detailId);
-    console.log(`    ${(status?.detail.kind ?? '').padEnd(10)} ${(status?.detail.value ?? d.detailId).padEnd(28)} ${d.score.toFixed(2)}`);
+    console.log(`    ${d.excerpt.text.padEnd(32)} ${d.score.toFixed(2)}`);
   }
 
   const contested = c.detailStatuses.filter((e) => e.disputes.length > 0);
@@ -50,7 +49,7 @@ function one(c: ClaimState) {
       const readings = e.competingValues
         .map((v) => `"${v.value}" (${v.count} contributor${v.count === 1 ? '' : 's'})`)
         .join('  vs  ');
-      console.log(`    ${e.detail.kind}: ${readings}`);
+      console.log(`    "${e.detail.excerpt.text}": ${readings}`);
     }
   }
 }
@@ -64,7 +63,7 @@ if (claimId) {
   }
   one(c);
 } else {
-  console.log(`\n${state.stateId}  ${state.label}\n`);
+  console.log(`\n${stateId}  as of ${state.asOf}\n`);
   console.log('  score  independent  disputes  confidence          claim');
   for (const c of state.claims) {
     const disputes = c.detailStatuses.reduce((n, e) => n + e.disputes.length, 0);

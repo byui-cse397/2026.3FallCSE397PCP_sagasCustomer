@@ -8,6 +8,7 @@ import type {
   SourceRecord,
 } from '@sagas/contracts';
 import { SiteHeader } from '../site/SiteHeader';
+import { PhraseClaims } from './PhraseClaims';
 
 /** Renders one section and the disputed readings named by its composition. */
 function NarrativeSection({
@@ -47,7 +48,7 @@ function NarrativeSection({
       </h2>
       {composition ? (
         <>
-          <p className="text-sm leading-relaxed">{composition.text}</p>
+          <PhraseClaims composition={composition} claims={claims} />
           {claimAuthors.size > 0 && (
             <p className="text-xs text-neutral-600">
               Based on claims by{' '}
@@ -68,16 +69,17 @@ function NarrativeSection({
       {[...details.values()].map((status) => (
         <aside
           key={status.detail.id}
-          aria-label={`Different readings of ${status.detail.kind}: ${status.detail.excerpt}`}
+          aria-label={`Different readings of “${status.detail.excerpt.text}”`}
           className="space-y-2 rounded border border-neutral-300 p-3"
         >
           <h3 className="text-sm font-medium">
-            Different readings of “{status.detail.excerpt}”
+            Different readings of “{status.detail.excerpt.text}”
           </h3>
           <ul className="grid gap-3 sm:grid-cols-2">
             {status.competingValues.map((reading) => {
+              // Contract 2.6.0: a dispute names the words that replace this detail in `to`.
               const reason = status.disputes.find(
-                (dispute) => dispute.proposedValue === reading.value,
+                (dispute) => dispute.to?.text === reading.value,
               )?.reasoning;
               const names = reading.contributorIds
                 .map((id) => {
@@ -119,7 +121,7 @@ function RecordsSection({
     sourceRoles.add('Source record');
     recordRoles.set(claim.sourceRecordId, sourceRoles);
 
-    for (const recordId of claim.evidenceRecordIds) {
+    for (const { recordId } of claim.evidence) {
       const evidenceRoles = recordRoles.get(recordId) ?? new Set<string>();
       evidenceRoles.add('Evidence record');
       recordRoles.set(recordId, evidenceRoles);
@@ -181,7 +183,7 @@ export function ArticleView({ state }: { state: GraphState }) {
         <div className="space-y-6">
           {state.sections.map((section) => (
             <NarrativeSection
-              key={section.id}
+              key={`${state.asOf}:${section.id}`}
               section={section}
               composition={compositions.get(section.id)}
               claims={claims}

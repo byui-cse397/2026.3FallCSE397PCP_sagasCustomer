@@ -1,11 +1,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { siteFixtures } from '../fixtures';
 import { reduceToStates } from '../src/reduce';
-import type { GraphState } from '@sagas/contracts';
+import type { FixtureState } from '../src/reduce';
 
 mkdirSync('states', { recursive: true });
 
-const built: { key: string; states: GraphState[] }[] = [];
+const built: { key: string; states: FixtureState[] }[] = [];
 
 for (const fixture of siteFixtures) {
   const states = reduceToStates(fixture.events, fixture.cuts, fixture.narrative);
@@ -43,7 +43,7 @@ writeFileSync(
 
 const bar = (n: number, max = 20) => '█'.repeat(Math.round((n / max) * 24)).padEnd(24, '·');
 
-function dump(s: GraphState) {
+function dump(s: FixtureState) {
   const i = s.integrity;
   console.log('\n' + '='.repeat(78));
   console.log(`${s.stateId.toUpperCase()}  ${s.label}`);
@@ -87,7 +87,7 @@ function dump(s: GraphState) {
       const readings = es.competingValues
         .map((v) => `"${v.value}" (${v.count} contributor${v.count === 1 ? '' : 's'})`)
         .join('  vs  ');
-      console.log(`  ⚡ ${es.detail.kind} "${es.detail.excerpt}" contested → ${readings}`);
+      console.log(`  ⚡ "${es.detail.excerpt.text}" contested → ${readings}`);
     }
     const pv = c.passover;
     if (pv.sounds_right + pv.dont_know + pv.dont_care > 0) {

@@ -19,7 +19,7 @@
 import { Pool } from 'pg';
 import type { GraphState, Site } from '@sagas/contracts';
 
-/** The fixture snapshots that exist. Real data will not be labelled like this. */
+/** The fixture snapshots that exist. Real data will not be labeled like this. */
 export type FixtureStateId = 't0' | 't1' | 't2' | 't3';
 
 export const FIXTURE_STATES: FixtureStateId[] = ['t0', 't1', 't2', 't3'];
@@ -68,7 +68,7 @@ for (const row of rows.rows) {
  *
  * With a database this becomes a query with a bounding-box filter, so the map
  * fetches what is on screen rather than the whole country to draw one
- * neighbourhood. The bounding box is the argument this still does not take.
+ * neighborhood. The bounding box is the argument this still does not take.
  *
  * Read `docs/GIS.md` before writing that query. "Everything within 2km" is not
  * a subtraction problem.
@@ -83,7 +83,7 @@ export function listSites(stateId: FixtureStateId = 't3'): Site[] {
 export const DEFAULT_SITE = 'corner-shop';
 
 /**
- * Everything known about one place, as of one moment.
+ * Everything known about one site, as of a time. The fixtures answer for their four test moments.
  *
  * With a database this becomes a join across places, records, claims and
  * contributions, then the scoring pass. Watch the query count. The obvious

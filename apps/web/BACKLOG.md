@@ -86,7 +86,7 @@ build. P2 is approved. Deploying waits for the copy to be approved.
   merging to the main branch deploys it.
 - The copy is the one the sponsor approved (De2), and nobody outside the team
   sees it before that.
-- No organisation is named, and anything invented is marked as invented.
+- No organization is named, and anything invented is marked as invented.
 
 **Not in this story.** A sign-up form or a changelog section. Both come later.
 
@@ -105,7 +105,7 @@ and nothing that calls it has to change.
 - A note on the data model: what is stored, what is worked out per request, and
   a proposal on two open questions. Should the database store events (each
   thing a person did) or snapshots (what a site looks like at one moment)? And
-  where does a claim's weight live, given that weight is moving onto details?
+  where does a claim's weight live, given that weight is on claims and details?
 
 **Not in this story.** Hosting the database.
 
@@ -166,10 +166,9 @@ documented, without a number. This replaces the pin band in B1.
 **Done when:** a small set of icons, in the style the design workstream is
 working toward, used on the map and the list.
 
-### N1 · The corner shop at t3 as a page
+### N1 · The corner shop at t3 as a page (Canon)
 
-**Workstream:** Narrative page. **Status:** Ready. Your fork already has the
-contract it needs.
+**Workstream:** Narrative page. **Status:** Ready.
 
 **Goal.** The site page from `PAGE-MODEL.md`, built in the app.
 
@@ -183,9 +182,9 @@ contract it needs.
 
 **Read first.** `PAGE-MODEL.md`, then open `page-model.html`.
 
-### N2 · A phrase opens the claims behind it
+### N2 · A phrase opens the claims behind it (Canon)
 
-**Workstream:** Narrative page. **Status:** Later. Needs N1.
+**Workstream:** Narrative page. **Status:** Ready.
 
 **Goal.** Selecting a phrase in a passage shows the claims it rests on.
 
@@ -196,9 +195,9 @@ contract it needs.
 - When the span names details, the detail's words are highlighted in the claim.
 - It works from the keyboard, and the reader can get back to where they were.
 
-### N3 · Step from t0 to t3
+### N3 · Step from t0 to t3 (Canon)
 
-**Workstream:** Narrative page. **Status:** Later. Needs N1.
+**Workstream:** Narrative page. **Status:** Ready.
 
 **Goal.** Watch the page change as the site's history arrives.
 
@@ -217,7 +216,7 @@ live on `/dev`.
 - Wireframes, sketched or in a design tool, for the landing page and the map
   with search, each with a short note on what a person sees when there is
   almost nothing at a place.
-- A first set of design tokens (colours, spacing, type sizes) that the
+- A first set of design tokens (colors, spacing, type sizes) that the
   components use (from story A1).
 
 **Read first.** `PAGE-MODEL.md`, and "Design direction" in
@@ -230,7 +229,7 @@ live on `/dev`.
 **Goal.** The words on the landing page, ready for the sponsor to approve.
 
 **Done when:** a draft goes to the sponsor in the questions issue. It names no
-organisation and marks anything invented.
+organization and marks anything invented.
 
 ### De3 · What is missing and what would be nice (Michael)
 
@@ -434,7 +433,7 @@ the list reachable without fighting the map.
 **Done when** someone who hasn't seen the app can find a named site on a phone
 without help.
 
-### N5 · How a narrative page reads the graph
+### N5 · How a narrative page reads the graph (Canon)
 
 **Workstream:** Narrative page. **Status:** Ready
 
@@ -455,7 +454,7 @@ it and treats it as open.
 
 **Not in this story.** Showing scores, counts or rankings to readers.
 
-### N4 · Show where a record came from
+### N4 · Show where a record came from (Canon)
 
 **Workstream:** Narrative page. **Status:** Later. Needs N1, De7, and
 collections in the contract (see "What does a collection carry?" in
@@ -539,6 +538,20 @@ questions issue.
 
 **Not in this story.** Scores, rankings or counts.
 
+### De12 · Show the terms
+
+**Workstream:** Design. **Status:** Draft.
+
+**Goal.** Anyone can read the terms before they hand anything over. The landing page and the
+full app both lead to them.
+
+**Done when:**
+- A page shows `docs/TERMS.md`, read from that file so the two can't drift apart.
+- The landing page and the full app both link to it.
+
+**Not in this story.** Accepting the terms, which is on the capture screen. The wording,
+which is the sponsor's.
+
 ### De8 · Readable for an older reader (Michael)
 
 **Workstream:** Design. **Status:** Ready
@@ -588,8 +601,7 @@ the page on to the harder data the fixtures already carry, and narrative work
 carries on alongside the map. The sponsor hasn't assigned anything. Pick owners as you
 finish your current work.
 
-Some of these use the freight depot, which came with contract 2.4.0. Your fork
-is still on 2.3.0, so pull upstream first (issue #32).
+Some of these use the freight depot, which came with contract 2.4.0. Your fork has it.
 
 ### M6 · Neighbourhood shapes on the map
 
@@ -647,8 +659,7 @@ still open.
 
 ### N6 · The freight depot as a page
 
-**Workstream:** Narrative page. **Status:** Ready, once you've pulled
-contract 2.4.0.
+**Workstream:** Narrative page. **Status:** Ready.
 
 **Goal.** The freight depot (`packages/fixtures/fixtures/freight-depot/events.ts`)
 is the fixture with the most cases in it: a recording in French, translations
@@ -667,7 +678,7 @@ looks.
 ### N7 · A claim in another language, with its translations
 
 **Workstream:** Narrative page. **Status:** Later. Needs N6 and contract
-2.5.0, which changes how translations are stored.
+2.6.0, which includes the change to how translations are stored.
 
 **Goal.** The project expects many of its readers to have family history in
 another language. A claim given in French shows its English translation, says
@@ -690,7 +701,7 @@ right.
 ### N8 · A recording transcribed one part at a time
 
 **Workstream:** Narrative page. **Status:** Later. Needs N6 and contract
-2.5.0, which changes how transcripts are stored.
+2.6.0, which includes the change to how transcripts are stored.
 
 **Goal.** Contributors transcribe a long recording a piece at a time. The page
 shows which parts can be read, by their start and end times, and marks the
@@ -711,7 +722,7 @@ transcript.
 ### N9 · A link record and its preview
 
 **Workstream:** Narrative page. **Status:** Later. Needs N6 and contract
-2.5.0.
+2.6.0.
 
 **Goal.** In contract 2.5.0 a link record carries a preview: a title and a
 short summary, both typed by the contributor. Sagas fetches nothing from the
@@ -742,10 +753,10 @@ same page from the same parts.
 - `src/components/ui` holds the generic pieces the first views need: at least
   text styles, a button, a card or panel, a tag or label, a tooltip, and a
   dialog.
-- Colours, spacing and type sizes are defined once, as design tokens (named
+- Colors, spacing and type sizes are defined once, as design tokens (named
   values like `--space-2` or `text-muted`), and components use the tokens rather
   than raw values.
-- Every component meets the colour contrast level of the Web Content
+- Every component meets the color contrast level of the Web Content
   Accessibility Guidelines (WCAG) 2.1, level AA, and every interactive one works
   from the keyboard.
 - Nothing in `src/components/ui` imports from `@sagas/contracts`. If it needs to
@@ -837,7 +848,7 @@ good end point. If it is not, the write-up alone is a complete result.
 **Done when:**
 
 - A diagram of the entities a page needs (sites, sections, source and
-  evidence records, claims and their details, disputes, extensions, renderings,
+  evidence records, claims, the details people point at, disputes, extensions, renderings,
   contributors) and how they relate.
 - A note on what is stored ready to draw versus worked out per request. Example:
   whether a site's list of sections is stored or built on each read.
@@ -868,7 +879,7 @@ components.
 **Done when:**
 
 - With `NEXT_PUBLIC_MAPBOX_TOKEN` set, the map renders every site from
-  `listSites()` as a pin, centred on the sites.
+  `listSites()` as a pin, centered on the sites.
 - With no token, `MapUnavailable` still renders the list. Both paths work.
 - Pins show at a glance whether a place is thinly or well documented, using the
   band from `IntegrityBadge`. No number is shown.
@@ -967,10 +978,10 @@ at that detail and the rest of the claim reads as undisputed.
 - The claim's own reading stays in place in the sentence, and the competing
   readings sit visibly beside it. Nothing marks either as the answer, and there
   is no vote count.
-- A dispute with reasoning but no proposed value still shows, as an objection
-  to the detail with its reasoning.
+- A dispute of the whole claim names no replacement for this detail, and it still shows,
+  as an objection with its reasoning.
 
-See "Disagreement lands on one detail" in
+See "Disagreement usually lands on one detail" in
 `packages/fixtures/README.md`. The corner shop site at `t2` has a clean example.
 
 ### C3 · Where a claim comes from
@@ -1000,9 +1011,12 @@ one, and several, as its own comment describes.
 **Status:** Draft. Starts with a design exercise. Code comes after it.
 
 How a reader is pointed at what to read next and what they could add. The
-routing that decides this belongs to the intelligence layer and does not exist
-yet, so this epic designs the interface against invented signals first. The
-passover interaction joins this epic once the design exercise is done.
+routing that decides this now sits with this layer, as backlog work, and your statement of
+work doesn't change. It doesn't exist yet. It reads profiles and each person's passovers, which the scoring graph
+in `packages/fixtures/scoring` carries, so it can run without the scorer. `graphState` only has
+totals. This epic designs the interface first. The passover interaction joins this epic once
+the design exercise is done. The intelligence layer's matching plugs in later as one more
+input.
 
 ### D1 · Design exercise: the suggestion interface
 
@@ -1021,6 +1035,66 @@ add it?
 
 **Done when:** mockups plus a page of reasoning, brought to a specification
 meeting. Stories to build it come out of that meeting.
+
+### Da10 · Each reader's passovers, for routing
+
+**Workstream:** Data. **Status:** Ready.
+
+**Goal.** Routing needs to know what each person has passed over and how, and the fixture
+states only carry totals per claim. Give the data layer a way to read one profile's passovers at
+a site, as of a time.
+
+**Done when:**
+- The read model returns a profile's passovers at a site as of a time: each with its claim, its kind
+  (`sounds_right`, `dont_know` or `dont_care`) and its time. It reads them from the fixture event
+  logs in `packages/fixtures/fixtures`, which have them, until the contract carries them.
+- A test checks it against a fixture site that has passovers from more than one person.
+
+**Not in this story.** Recording a new passover, which comes with the passover interaction.
+
+### Da11 · A site as of any time
+
+**Workstream:** Data. **Status:** Ready. Needs contract 2.7.0.
+
+**Goal.** The claim is the model's central object, and every claim, record and passover carries
+its own time. So the read model stores the contributions, and answers "this site as of this
+time" from them. The fixtures' t0 to t3 stay as moments to test against, and the database stops
+holding one snapshot per moment.
+
+**Done when:**
+- The database holds each site's contributions, the fixture events, with their times, and no
+  row per state.
+- `getSiteState(slug, asOf)` returns the site as of any time, by folding the contributions up to
+  it with `reduceToState(events, asOf)` from `@sagas/fixtures`. At each fixture moment's `asOf`
+  time, its claims, records and passovers match the fixture state for that moment. The sections
+  and the list of what changed since the previous moment still come from the fixture files.
+- N3's control steps through times, starting with the four fixture moments.
+
+**Not in this story.** Contributions from the other layers. They arrive with integration, in
+the same shape.
+
+### D2 · Suggest what to read next, from what someone has already done
+
+**Workstream:** Data. **Status:** Ready. Needs Da10. It's backlog work, and your statement of
+work doesn't change. D1 designs what the reader sees, and this decides what goes in it, so the
+two can run side by side.
+
+**Goal.** Given one person and one site, a function returns the claims to show them next,
+in order, each with a reason.
+
+**Done when:**
+- A function takes a site's claims, a profile and that profile's passovers from Da10, and
+  returns an ordered list of claims, each with
+  a reason.
+- It follows rules you write. Which rules are yours to choose. Some examples are not
+  showing a claim again after `dont_care`, offering the next claim in that thread after
+  `sounds_right`, and favoring contested details or details with few replies, because that's
+  where help is needed.
+- Tests read as scenarios: given these passovers, the next suggestion is this claim, for
+  this reason.
+
+**Not in this story.** Tuning the rules from real passover data, which doesn't exist yet. The intelligence
+layer's matching, which plugs in later as one more input.
 
 ---
 
