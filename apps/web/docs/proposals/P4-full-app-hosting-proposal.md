@@ -1,323 +1,380 @@
 # P4: Hosting the full app
 
-- **Project:** Sagas experience layer
-- **Status:** Draft for team review. The recommendation is conditional: database access, and a CPU measurement on Cloudflare itself, wait on the sponsor (see "Still open").
-- **Workstream:** Platform. **Issue:** #34. **Address:** P6, #35
-- **Research dates:** local tests from 30 October 2026; the sponsor's facts and the comparison updated 2–3 November 2026
-- **Currency:** USD; taxes and currency conversion excluded
+- **For:** the sponsor's hosting decision on 8 November 2026
+- **Workstream:** Platform. **Issues:** P4 #34; the address is P6 #35
+- **Status:** Final. Two checks wait on database access, which the sponsor is setting up on 7–8 November: CPU time on Cloudflare itself, and a Worker reaching the database. The test Worker runs both in the first days of the following week. The other layers are confirmed later, against the teams' real code.
+- **Research:** 30 October to 6 November 2026. Retested on `main` at contract 2.7.0 on 6 November
+- **Currency:** USD; standard pricing; taxes and currency conversion excluded
 
 ## Recommendation
 
-**Cloudflare Workers, as a second Worker next to `sagas-landing` on the sponsor's existing account, deployed only by GitHub Actions, with site pages built ahead of time where the data allows.**
+**What's asked on Sunday:** the platform, and the $5 account base. How each layer fits, and what the whole project costs to run, are confirmed as the other teams' code becomes available.
 
-It starts on Workers Free only once two checks pass, and both can only happen once a database is reachable:
+1. **Host the full app on Cloudflare Workers,** as a second Worker beside `sagas-landing` on the sponsor's account, deployed only by GitHub Actions. At the assumed baseline traffic it fits Workers Free, if its requests stay within Free's CPU limit and the account's busiest day stays under 100,000 requests.
+2. **Host the other layers on the same account:**
+   - their web apps and APIs as Workers;
+   - their files in R2;
+   - media processing (`ffprobe`, `ffmpeg`) in a Cloudflare Container.
 
-- the CPU time measured on Cloudflare itself;
-- a Worker reaching the hosted Supabase database.
+   Containers need Workers Paid, which gives the account a **shared base of $5 a month.** The total also depends on several things that the account's web traffic can't predict:
+   - how long media processing runs;
+   - how many files are kept, and how often they're read and written;
+   - how much is transcribed and translated;
+   - what the other layers' real code needs.
 
-If CPU is the problem, Workers Paid ($5/month for the account) is the fallback, and it needs the sponsor's approval. If the database can't be reached from a Worker, the fallback is Render.
+3. **Transcription can avoid a container,** if the content team picks a model that Workers AI runs, such as Whisper, at $0.0005 per audio minute. The content team chooses the models.
+4. **Move to Next.js 16** in its own pull request, before the full app is published (P7).
+5. **Decide on Sunday, then confirm with the test Worker.** The sponsor decides from this proposal on 8 November. Once database access is up, the test Worker checks that a Worker can reach the database. If it can't, the decision is looked at again, with **Render** as the fallback. Render's starting prices are known: $7 a month per service.
 
-Reads stay in `packages/read-model`, on standard Postgres, with host settings kept out of feature code, so a plain Node or container host stays possible either way.
+| What the sponsor asked about                      | Finding                                                                                                                                                                                                                                             | Status                                                                                  |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Cloudflare Workers                                | The full app runs in Cloudflare's runtime after five small changes. Locally, data calls and pre-built pages take 2–3 ms. The `/dev` sandbox (article, map and controls), rendered on every request, takes about 18 ms. Free's limit is 10 ms of CPU | Tested locally on 6 November; CPU on Cloudflare itself waits on the test Worker         |
+| Containers for media processing and transcription | Media processing needs a container, on Workers Paid. Transcription can use Workers AI instead, if the chosen model runs there                                                                                                                       | Based on the other teams' starter code; their real code is seen the week of 16 November |
+| Whether a Worker can reach the database           | Nothing in principle blocks it. Supabase's Network Restrictions, and the ranges they allow, decide the route: direct, Hyperdrive or Render                                                                                                          | The sponsor answers the settings in #11 this weekend; the test Worker confirms it       |
+| Render as a fallback                              | $7 for the full app, which is not tight on bandwidth at the assumed baseline. Each extra service is another $7, and the next instance size is $25                                                                                                   | Rechecked 6 November                                                                    |
+| The move to Next.js 16                            | Passes the whole workspace's CI and builds for Cloudflare on 16.4.5                                                                                                                                                                                 | Tested on 6 November; its own pull request before P7                                    |
 
-| What P4 asks for                    | Cloudflare Workers                                                                                                        | Netlify                                                                                                                                                                       | Render                                                                                                                                    |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Free while it's being built         | **$0** at today's traffic, with pages built ahead of time                                                                 | $0 at today's pace of deploys; every project pauses if the credits run out                                                                                                    | Free sleeps when idle, and Render says not to use it for production; $7/month to stay awake                                               |
-| Low cost and sustainable after that | **About $5–6/month at 100×.** Bandwidth and static files are free                                                         | About $60/month at 100×, mostly bandwidth and requests                                                                                                                        | About $30/month at 100×, mostly bandwidth                                                                                                 |
-| Not on Vercel                       | Yes                                                                                                                       | Yes                                                                                                                                                                           | Yes                                                                                                                                       |
-| Uses what already exists            | **Yes:** the sponsor's account, the Workers-only token, the domain's DNS, and the same deploy pattern as the landing page | A new account, token and DNS record                                                                                                                                           | A new account, deploy hook and DNS record                                                                                                 |
-| Deployed only by GitHub Actions     | Build with the adapter, then `wrangler deploy` with the existing token, as for the landing page                           | Build in Actions, then `netlify deploy --prod --no-build`, with `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` as repository secrets and Netlify's own builds from Git not linked | Build a container image in Actions, then deploy it with a deploy hook stored as a repository secret, with Render's Auto-Deploy set to Off |
-| Database allow-list possible        | Not for direct Worker sockets; yes through Hyperdrive, from Cloudflare's published ranges                                 | No: function addresses change, and fixed ones are an Enterprise add-on                                                                                                        | Yes: services use regional outbound ranges, shown in the dashboard                                                                        |
-| Runs our Next.js app                | After five small changes, tested on Next.js 15 (no migration)                                                             | Netlify's adapter supports Next.js 13.5 and later; not tested here                                                                                                            | As it is, a plain Node server; tested under Node locally                                                                                  |
-| Reaches the Supabase database       | **To test:** the pooler over TCP, or Hyperdrive                                                                           | The pooler, from Node functions                                                                                                                                               | The pooler, as locally; Render has an Oregon region, next to `us-west-2`                                                                  |
+The app stays portable whichever host is chosen. It reaches the database through `packages/read-model` on standard Postgres, and host settings stay out of feature code, so Render or any other Node host remains possible.
 
-The table's "today" and "100×" figures use the sponsor's 30-day account traffic as a stand-in. See "Cost at today's traffic and at 100×" for the assumptions, and for a second reading of the same figures that lowers every cost but doesn't change the order.
+## 1. The full app on Cloudflare Workers
 
-**Every host builds in GitHub Actions,** because `next build` needs a database, and only CI's own seeded Postgres has one. So Netlify and Render ship a build made in Actions rather than building on their side. A Render source build would need database access during its own build.
+**It works in Cloudflare's runtime.** On 6 November, `main` was moved to Next.js 16.4.5. It was built with the OpenNext adapter for Cloudflare (1.20.16) and run in `workerd`, Cloudflare's runtime, against Postgres seeded with the fixtures. The results:
 
-## Can Cloudflare serve the app?
-
-**Very likely, after five small changes, and with no framework upgrade.** On 30 October the app on `main` was built with the OpenNext adapter for Cloudflare Workers and run in `workerd`, Cloudflare's runtime, on a local machine, reading the seeded read model from Postgres. "Every route" below means every route `apps/web` has today: `/`, `/dev`, `/api/sites` and `/api/sites/[slug]`. The site pages (`/sites/<slug>`) aren't built yet, so they couldn't be tested.
-
-- **Every route answered,** once the changes below were made.
+- **Every route answered:** `/`, `/dev`, `/api/sites` and `/api/sites/[slug]`, which are all the routes the app has. The site pages (`/sites/<slug>`) aren't built yet.
 - **Twelve simultaneous first requests** to a fresh Worker all succeeded.
-- **In a browser it behaved exactly like the same app under plain Node.**
-- **It was repeated on a second machine** with the same results.
+- **In a browser,** the pages behaved exactly as under plain Node.
+- **The bundle** is 5.0 MiB, against a 64 MiB limit.
+- **Earlier runs** on Next.js 15.5.28 (30 October), and on a second machine, gave the same picture.
 
-It has not run on Cloudflare itself, so the CPU figures are local estimates. The sponsor has approved a temporary test Worker to measure them, once a database is reachable.
+| Route (Next.js 16.4.5, contract 2.7.0)                                                                                            | Median / p95, local | What to watch                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------- |
+| `/`, built ahead of time and served from the cache                                                                                | 2 / 3 ms            | Likely within Free                                                              |
+| `/api/sites`                                                                                                                      | 2 / 3 ms            | Likely within Free                                                              |
+| `/api/sites/freight-depot`                                                                                                        | 3 / 4 ms            | Likely within Free                                                              |
+| `/dev`, the development sandbox: article, map, controls and acceptance criteria, rendered on every request (freight depot, t0–t3) | 18 / 22 ms          | Shows the cost of rendering on each request; not the future article page's cost |
 
-### What the app needs to change
+**These are local wall times, not Cloudflare's CPU time.** Wall time includes waiting on the database, which Cloudflare doesn't count as CPU. The times were also measured on a shared machine, not Cloudflare's. So they show which routes to measure once deployed, and the test Worker measures the real CPU. Cloudflare ends a Worker that keeps going over 10 ms of CPU. If pages rendered on each request do, there are two remedies:
 
-None of these are made in this proposal. They belong to P7, or to the workstream named.
+- **Build site pages ahead of time.** Fixture data changes only on deploy, so stored pages cut the rendering work.
+- **Use Workers Paid,** which raises the limit to 30 seconds per request. The containers need Paid anyway, so once the other layers arrive, the 10 ms limit stops mattering.
 
-| #   | Change                                                                                                                                               | Why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Size                                  |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| 1   | **Next.js 15.5.28 or later, with adapter `@opennextjs/cloudflare` 1.20.13 or later**                                                                 | The adapter needs Next.js 15.5.28 or later; `main` has 15.5.23. Adapter 1.20.12 wrongly refused every Next.js 15 release as unsupported. 1.20.13 fixed this: it treats a major as supported until two majors later. With 15.5.28 and 1.20.13 the build passed without any override.                                                                                                                                                                                                                                  | One patch bump and one dev dependency |
-| 2   | **Make `pg` reachable from the app:** add `pg` and `pg-cloudflare` to `apps/web`'s dependencies and to `serverExternalPackages` in `next.config.mjs` | `pg` reaches the database in Workers through `pg-cloudflare`. That package only gives its socket code to Cloudflare's own build; anywhere else it gives an empty file. Without this change every database read failed with `TypeError: … is not a constructor`.                                                                                                                                                                                                                                                      | Three lines and the lockfile          |
-| 3   | **`/dev` must not load the fixture index from the repository at request time**                                                                       | `/dev` calls `loadIndex()` from `@sagas/fixtures/acceptance`, which reads `packages/fixtures/states/index.json` from disk on every request. A Worker's file system only holds the modules in its own bundle, so the deployed bundle doesn't have that path, and `/dev` returned 500. Bundling the JSON fixed it. Reading the list from the read model would too.                                                                                                                                                     | A few lines                           |
-| 4   | **Serve pages built ahead of time from the static-assets cache** (OpenNext's static-assets incremental cache)                                        | Without it the Worker rendered the home page on every request: about 16 ms each. With it, the Worker serves the stored page in about 2 ms. Each page request still runs the Worker, so it still counts as a request. Only files that match a path, like `/_next/static/…`, skip the Worker and are free. This cache is read-only and doesn't support revalidation, so changed pages need a rebuild and a redeploy. That suits fixture data. If pages later need revalidation, OpenNext's R2-based cache replaces it. | A config file                         |
-| 5   | **Keep the build output out of git and lint** (`.open-next/`, `.wrangler/`)                                                                          | ESLint scanned the adapter's output and failed. Lint passed once those folders were ignored.                                                                                                                                                                                                                                                                                                                                                                                                                         | Two ignore entries                    |
+**A reminder about `/dev`:** `apps/web/README.md` and the SRS draft call it a development tool, and the page itself says to replace it once there's something better. So we propose:
 
-**Next.js 16 is not needed for hosting.** It is a later, separate decision, but one with a date: Next.js 15's support was extended from 21 October 2026, and its security releases end on 31 January 2027. So the move to 16 belongs before then, in its own pull request. On 16.4.2 (with adapter 1.20.12) the app built, typechecked, linted, passed its 14 web tests and answered every route in `workerd`, so the upgrade looks feasible. Before taking it, check:
+- **On the fixture preview (P7):** keep `/dev` available. It's where the article can be shown to the sponsor.
+- **On the eventual public site:** disable it, with the setting and the check in change 3 below. A line in the README says where it runs.
+- **The article's public home is the site pages (M4).** We plan to prerender the shared fixture site pages; their rendering and cache behaviour will be verified when M4 is implemented.
+  - Views as of a chosen time, and personalised interactions, need their own design.
+  - Passover writes can stay separate dynamic requests. They don't need the whole article rendered again.
 
-- browser behaviour on 16;
-- cold starts;
-- the whole workspace's CI.
+**Passovers will need writes.** The planned passover interaction stores passovers with anonymous guest IDs, in the experience layer's own tables (Da8). Recording them isn't built yet: Da10 leaves it to that interaction. So:
 
-Node is not a concern: CI uses 22.10.0 from `.nvmrc`, and 16.4.2 needs 20.9 or later. Moving to 16 affects every workstream, so it gets a decision record.
+- the app's database user will need write access to those tables;
+- each passover is a request that runs when someone acts, and can't be built ahead of time. Its CPU and database time remain to be measured, and it isn't in the cost model yet.
 
-Two things already planned also apply:
+**What the app needs before it's published (P7):**
 
-- **The build needs a database.** `next build` renders the home page from Postgres. The preview uses fixture data only (P7), so CI can start its own Postgres and seed it, as locally. CI's database disappears after the job, so it serves the build only; at runtime the app needs the hosted database. This is the CI database job already on the Platform plan.
-- **The read model's startup load works on Workers as it is.** The module first loads inside a request, runs one query and closes its connection before the request ends. Twelve simultaneous first requests didn't break it. If the read model later queries on each request (Da5), it has to create its client inside each request. OpenNext's guidance says not to keep a global client.
+1. **Versions:** Next.js 16.4.5 or later, with adapter `@opennextjs/cloudflare` 1.20.16. The adapter's minimum Next.js version rises with Next.js security releases, so Next.js has to be kept patched.
+2. **The database driver:** `pg` and `pg-cloudflare` as the app's own dependencies, and in `serverExternalPackages`. Without this, every database call fails in a Worker.
+3. **`/dev`:**
+   - **On the preview:** it reads the fixture index from the repository on every request, and a deployed Worker doesn't have that file. Bundle the index, or read the list from the read model.
+   - **For the public site:** a setting that rejects `/dev` requests on the server, before any fixture loads. A test requests `/dev` directly with the setting off, rather than only checking that its links are hidden.
+4. **The static-assets cache:** pages built ahead of time are served from it, in about 2 ms instead of about 16. It is read-only, so changed pages need a redeploy, which suits fixture data.
+5. **Ignore files:** `.open-next/` and `.wrangler/` stay out of git and lint.
 
-### Measurements
+**The build needs a database,** because `next build` renders the home page from Postgres. CI starts its own Postgres and seeds it, which is the CI database job already planned. CI's database ends with the job, so at runtime the Worker uses the hosted database. The read model loads once, inside the first request, and closes its connection, which Workers allow. Anything that queries on every request, such as a passover or Da5's map data, must create its database client inside that request.
 
-All measured in local `workerd`, against Postgres 16 seeded with the 24 fixture states. Each figure is the wall time of 50 warm requests (60 for `/dev`, spread over t0 to t3).
+## 2. Can a Worker reach the database?
 
-These are preliminary. Wall time on a shared cloud machine isn't Cloudflare's CPU time, so they show where the risks are, not what Cloudflare will measure.
+**Nothing in principle blocks it:**
 
-| Route                                                | What it does                                          | Next.js 15.5.28, adapter 1.20.13: median / p95 | Next.js 16.4.2, adapter 1.20.12: median / p95 | Against Free's 10 ms CPU                    |
-| ---------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------- | --------------------------------------------- | ------------------------------------------- |
-| `/`                                                  | Home page, built ahead of time, served from the cache | 2.5 / 4 ms (16 / 20 ms rendered each time)     | 2 / 4 ms                                      | Promising; deployed CPU measurement pending |
-| `/api/sites`                                         | All sites, from the read model                        | 3 / 4 ms                                       | 2 / 4 ms                                      | Promising; deployed CPU measurement pending |
-| `/api/sites/[slug]`                                  | One site's state                                      | 3 / 5 ms                                       | 2 / 5 ms                                      | Promising; deployed CPU measurement pending |
-| `/dev`                                               | A full article, rendered on every request             | 15 / 22 ms                                     | 18 / 22 ms                                    | Risk of exceeding Free's CPU limit          |
-| Twelve simultaneous first requests to a fresh Worker | Load the code and run the one read-model query        | All succeeded, 0.25–0.43 s each                | One request: 0.33 s                           | Mostly waiting on the database              |
+- Worker sockets reach public addresses over TCP, with TLS.
+- Supabase's pooler accepts IPv4 connections, on every plan.
 
-| Bundle                        | Next.js 15.5.28 | Next.js 16.4.2 | Limit, Free and Paid            |
-| ----------------------------- | --------------- | -------------- | ------------------------------- |
-| Uncompressed (`Total Upload`) | 4,579 KiB       | 5,186 KiB      | 64 MiB                          |
-| gzip, for reference           | 936 KiB         | 1,082 KiB      | No limit since 4 September 2026 |
+**What depends on the sponsor's settings:**
 
-**Repeated on a second machine** (WSL, with the team's Docker database), from the same setup on `main` after the 2.4.0 sync. Times are from Wrangler's request log, over about 12 refreshes each, after the first request:
+- **Network Restrictions.** If they're on, the ranges they allow decide the route. Cloudflare's published IP ranges can't be used to reliably allow-list direct Worker socket connections. Hyperdrive works if Cloudflare's published ranges are allowed, and Render works once its outbound ranges are.
+- **"Enforce SSL on incoming connections."** It doesn't change the route. The app connects encrypted either way; the setting only decides whether the database also refuses unencrypted connections.
 
-| Route                                             | First request | Then: median (range) |
-| ------------------------------------------------- | ------------- | -------------------- |
-| `/`                                               | 26 ms         | 4–6 ms               |
-| `/dev`, freight depot at t3 (the richest fixture) | 38 ms         | 13 ms (11–16)        |
-| `/dev`, corner shop at t0 (the lightest state)    | —             | 12 ms (11–14)        |
-| `/api/sites/freight-depot`                        | 32 ms         | 5 ms (4–6)           |
+| Way to connect                                                             | Works when                                                   | Notes                                                                                                                                                                                                                          |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`pg` over a Worker socket** to Supabase's transaction pooler (port 6543) | Network Restrictions are off                                 | Supabase recommends this pooler for serverless code                                                                                                                                                                            |
+| **Hyperdrive**, Cloudflare's connection pool                               | Restrictions are off, or allow Cloudflare's published ranges | Cloudflare's guide uses Supabase's direct connection, which is IPv6-only on Supabase Free and Pro unless the IPv4 add-on is bought, so that is part of the test. Included in Free (100,000 queries a day) and Paid (unlimited) |
+| **Render** (the fallback)                                                  | Restrictions are off, or allow Render's outbound ranges      | Render services use regional outbound IP ranges, shown in its dashboard. `pg` connects exactly as it does locally, from Oregon, next to `us-west-2`                                                                            |
 
-**For comparison, the sponsor's account on Cloudflare** (#11, 2 November) shows CPU time at p90 of 0.569 ms over the last 30 days. That is the static landing page and anything else on the account, not this app, but it shows real Cloudflare CPU for a simple Worker is well under these local figures.
+**The plan:**
 
-**Browser check** (Chromium, against the local Worker on the Next.js 15.5.28 build, compared with the same pages under plain `next start` on `main`):
+1. **The sponsor decides on Sunday,** from this proposal.
+2. **The test Worker confirms the connection** in the first days of next week, once access is up. It also measures CPU, and runs a query with `$1` parameters, as passover writes will.
+   - `pg`'s ordinary parameterized queries are expected to work through the transaction pooler.
+   - Named prepared statements aren't supported there, so the app doesn't use them.
+3. **If the test Worker can't reach the database,** the sponsor looks at the decision again, with Render as the fallback (#11, 6 November).
 
-- **Pages and links:** the home page and `/dev` render, with query parameters choosing the site and state.
-- **Navigation:** clicking to another state stays client-side, and refresh and the back button work.
-- **Missing pages:** a missing page and an unknown site both give 404, not 500.
-- **Same as Node:** both showed the same 404s for prefetched `/sites/<slug>` links. The app already links to site pages that aren't built yet (M4 adds them), so that isn't a hosting issue.
+**The database layout** (sponsor, #11, 6 November):
 
-**What it means:**
+- **One Supabase project, with one shared model:** the one in `packages/contracts/src/model.ts`.
+- **Tables a layer needs only for itself** go in that layer's own Postgres schema, beside the shared tables.
+- **On Supabase Free, the 500 MB limit is shared by all three layers,** so media files belong in R2, not the database.
 
-- **Data calls and pages built ahead of time look comfortable on the Free plan.**
-- **An article rendered on every request is a risk:** 15 to 22 ms on one machine, 11 to 16 ms on the other. Cloudflare allows occasional overruns, but ends a Worker that keeps going over 10 ms.
-- **The lightest and richest articles took nearly the same time:** 12 ms for the corner shop at t0, against 13 ms for the freight depot at t3. That suggests most of the cost is rendering the page, not its data. Two cases don't show which change would get an article under Cloudflare's limit, though.
-- **That justifies a measurement on Cloudflare, but doesn't yet show that Paid is needed.**
+**Still open, answered by the sponsor in #11 when he sets up access this weekend:**
 
-If it is a problem, there are two ways forward:
+- [ ] Network Restrictions: on or off, and which ranges they allow.
+- [ ] "Enforce SSL on incoming connections": on or off.
+- [ ] The plan. Free projects pause after a week without activity.
+- [ ] How the connection details reach the team. They have two destinations:
+  - **CI:** a GitHub repository secret, for the deploy job;
+  - **the running Worker:** a Worker secret or a Hyperdrive configuration. The pipeline can set a Worker secret with the existing token.
 
-- **Build site pages ahead of time.** Fixture data only changes when the app is deployed, so stored pages cut the rendering work. Free still depends on the measured CPU and the daily request count.
-- **Use Workers Paid.** It costs $5/month for the account, and the CPU limit goes from 10 ms to 30 s by default.
+## 3. Hosting all three layers
 
-## Cost at today's traffic and at 100×
+This lists each layer's parts, from the upstream starter code. The other teams' real code is seen at the meetings in the week of 16 November, so this is a plan to confirm, not a commitment.
 
-### The traffic stand-in
+| Part                                 | What it is (upstream)                                                                    | On Cloudflare                                                                                                                                                                                      | Cost                                                                                                                                                                                                                                                      |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Experience: `apps/web`               | Next.js                                                                                  | Worker (tested, section 1)                                                                                                                                                                         | Within the account's allowance                                                                                                                                                                                                                            |
+| Content: `apps/capture-web`          | Empty upstream                                                                           | Worker or static assets                                                                                                                                                                            | Within the account's allowance                                                                                                                                                                                                                            |
+| Content: `apps/capture-api`          | Express 5 and `pg`                                                                       | Worker, using `nodejs_compat` and `httpServerHandler`. Not yet tried with their code. Its module-level `pg.Pool` would need a client created per request instead                                   | Within the account's allowance                                                                                                                                                                                                                            |
+| Intelligence: `apps/graph-api`       | Express 5 and zod                                                                        | Worker, the same way                                                                                                                                                                               | Within the account's allowance                                                                                                                                                                                                                            |
+| Files: the `sagas-media` bucket      | S3 API, presigned uploads, recordings of about 600 MB                                    | R2, which speaks the S3 API                                                                                                                                                                        | Free each month: 10 GB-months of storage, 1 million Class A (write) and 10 million Class B (read) operations. Then $0.015 per GB-month, plus per-operation charges. No egress fees                                                                        |
+| Media worker: `ffprobe` and `ffmpeg` | Probes each upload and makes derived files                                               | **Can't run in a Worker.** A Cloudflare Container, started when there's work. Sizes run from `lite` (1/16 vCPU, 256 MiB) to `standard-4` (4 vCPU, 12 GiB); `basic` (¼ vCPU, 1 GiB) is a likely fit | Paid includes 25 GiB-hours of memory, 375 vCPU-minutes and 200 GB-hours of disk a month. Memory and disk are charged while the container runs, CPU only for what it uses. For example, 100 hours a month of `basic`, using its full ¼ vCPU, adds about $2 |
+| Jobs for the media worker            | Upstream expects them in Postgres, with a library such as `graphile-worker` or `pg-boss` | A job in Postgres doesn't start a sleeping container by itself. Something has to dispatch it: the API Worker on upload, a scheduled Worker, or Queues                                              | Queues on Free: 10,000 operations a day, with 24-hour retention; more on Paid                                                                                                                                                                             |
+| Transcription                        | Whisper is named upstream as a place to start                                            | **Workers AI, if the chosen model runs there:** `whisper-large-v3-turbo` costs $0.0005 per audio minute                                                                                            | 10,000 Neurons a day are free on Free and Paid, shared by every model on the account; Whisper alone would get about 214 audio minutes from them. Beyond that, $0.011 per 1,000 Neurons, on Paid only                                                      |
+| Translation                          | NLLB-200 and `opus-mt` are named upstream                                                | Workers AI has `m2m100-1.2b`; otherwise a container                                                                                                                                                | $0.342 per million tokens, in and out, from the same Neurons                                                                                                                                                                                              |
+| Database                             | One Supabase project (section 2)                                                         | Not on Cloudflare                                                                                                                                                                                  | The sponsor's Supabase plan                                                                                                                                                                                                                               |
 
-The app isn't published, so "today's traffic" needs a stand-in. The sponsor gave the figures his dashboard has (#11, 2 November), with two warnings:
+**Checks to agree with the content team:**
 
-- **Account-wide figures:** Cloudflare doesn't show metrics for `sagas-landing` alone, so they cover the whole account.
-- **Pre-launch peak:** the busiest day, about 1,090 requests on 11 October, was before the landing page went live on 19 October, so it doesn't stand in for the page. It isn't used here.
+- **Dispatch:** how a job reaches the media container, with retries and shutdown. Queues would be a design choice to make with them, not a given.
+- **Long recordings** probably need `ffmpeg` to extract and split the audio before transcription. The model's input limit has to be checked.
+- **The model choice is theirs.** Upstream says checking each model's licence is part of their job (`apps/capture-api/README.md`). A model not on Workers AI would run in a container, on CPU only: Cloudflare's container limits list no GPUs, so it would be slower than Workers AI.
 
-| Last 30 days, whole account (Free plan) |        |
-| --------------------------------------- | ------ |
-| Total requests                          | 12.11k |
-| Worker invocations                      | 4.99k  |
-| Errors                                  | None   |
-| CPU time, p90                           | 569 µs |
+**Workers Paid is per account.**
 
-**What these figures are not:**
+- **Workers:** every Worker on it shares one allowance of 10 million requests and 30 million CPU-milliseconds a month.
+- **Containers:** billed separately, against their own included amounts (above). The Worker and Durable Object in front of each container count as Workers and Durable Objects usage.
 
-- **Not page views or demand for the app.** They are account totals for a static landing page.
-- **Not an average CPU.** The 569 µs is a p90 for today's workload, so it can't be multiplied by requests to price the app.
-- **Incomplete.** They give no response sizes, future peaks or function durations.
+Usage shows per Worker in the dashboard, and each Worker's CPU can be capped. The landing page is on the same account, and its static files cost nothing.
 
-**Assumption:** each of the 12,110 requests counts as one page view of the full app. That is about 400 views a day at 1×, and about 40,000 a day at 100×. It is generous, because the landing page's own file requests are counted as views too. The real demand is unknown until the preview is published.
+## 4. Render, rechecked
 
-### What one page view costs
+- **Instances:** $7 a month for 0.5 CPU and 512 MB. The next size is $25, for 1 CPU and 2 GB.
+- **Bandwidth:** since 1 August 2026, the Hobby workspace includes 5 GB of outbound a month (it was 100 GB). Each GB beyond costs $0.15.
+- **The full app:** at the assumed baseline, $7 is not tight on bandwidth: 1.6 GB of the 5 GB. Whether 0.5 CPU keeps up at peaks is untested. At 100×, it's about $30, and the extra is bandwidth, not a bigger instance.
+- **All layers, as a sizing scenario:** every always-on service is its own $7. The app, `capture-api`, `graph-api` and the media worker come to $28 a month before bandwidth.
+  - This assumes each fits in 512 MB and that `capture-web` needs no server of its own. The media worker's size is untested.
+  - Render has no object storage, so files would still need R2.
+  - A transcription model needs more than 512 MB; Workers AI can be called from Render instead.
+- **Free web services:**
+  - they sleep after 15 idle minutes, and take about a minute to wake;
+  - Render may suspend one that sends unusually high traffic over the internet, including to an external database.
+- **Deploying from GitHub Actions:** build a container image in Actions, where the CI database is, push it to a registry, and deploy that image to Render with a deploy hook stored as a repository secret. Render's Auto-Deploy stays off. If Render built the app from Git instead, its own build would need a database it can reach.
+- **Why it's the fallback:** it runs the app as it is, as a plain Node server with no adapter, and its outbound IP ranges can be allow-listed.
 
-All measured locally on 30 October to 2 November:
+## 5. The move to Next.js 16
 
-- **Worker requests:** 7 on `/dev`: the page, plus Next.js prefetching the six `/sites/<slug>` links on it. 8 on the home page, which also prefetches `/dev`. The JavaScript and CSS are static files, which don't run a Worker. The model uses 7.
-- **All requests:** 14 on a first visit (8 page and file requests plus the 6 prefetches). Netlify bills these.
-- **Bytes on a first visit:** about 129 KiB. That's 118.5 KiB for `/dev` (106 KiB of it JavaScript), plus six prefetches of about 1.7 KB each. A repeat visit is 0.4 to 10 KiB, because the browser keeps the files, but the cost model uses the first-visit figure throughout.
-- **CPU per view, upper bound:** 35 ms if every request is a cache hit or an API call (5 ms each), or 46 ms if the article is rendered on each request (16 ms plus six cache hits).
-- **Deploys:** 7 merges to `main` changed app code in the last month (3 October to 2 November, documentation excluded). Sprint three will add more, so 20 a month is also shown.
+- **Agreed** at the 6 November meeting. Next.js 15 gets security releases until 31 January 2027, extended from 21 October 2026.
+- **Its own pull request, before P7,** with a decision record, since it affects every workstream.
+- **Tested on 6 November on `main`** (contract 2.7.0), with 16.4.5:
+  - typecheck, lint, acceptance and every test pass (web 28, landing 109, fixtures 162, graph-api 8);
+  - the Cloudflare build needs no override;
+  - the browser check matches plain Node.
 
-### Results
+  The 30 October run on 16.4.2 agreed. Node isn't a concern: CI uses 22.10.0, and 16 needs 20.9 or later.
 
-|                                     | Cloudflare Workers                                                                                                                                                                                    | Netlify                                                                                                                                                               | Render                                                                                                                                                                                                                                                             |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **1× (about 400 views a day)**      | **$0.** About 2,800 Worker requests a day, against Free's 100,000. If articles are rendered on each request and go over 10 ms, Workers Paid at $5                                                     | **$0** at 7 deploys (183 of 300 credits). **$9** (Personal) at 20 deploys (378 credits)                                                                               | **$7.** One always-on instance; bandwidth of 1.6 GB, inside the 5 GB included                                                                                                                                                                                      |
-| **100× (about 40,000 views a day)** | **$5.25–5.51.** About 283,000 Worker requests a day is over Free, so Paid. 8.5 million requests, inside the 10 million included, and 42–56 million CPU-milliseconds, of which 30 million are included | **About $60.** About 7,900–8,100 credits: bandwidth 3,192, requests 3,391, compute 1,177, deploys 105–300. That's Pro's 3,000 credits plus four packs of 1,500 at $10 | **About $30.** $7, plus 160 GB of bandwidth against 5 GB included, at $0.15 per GB. Whether one 0.5 CPU instance keeps up at peaks is untested                                                                                                                     |
-| Where the free tier stops           | At about 30–35× today's traffic (100,000 Worker requests a day, at 7–8 a view), or with requests that keep going over 10 ms CPU                                                                       | When the month's 300 credits run out. Deploys alone use 15 each, and then every project on the account pauses until the next month                                    | Free sleeps after 15 idle minutes and takes about a minute to wake, and Render may suspend a Free service that sends an uncommonly high volume of traffic over the internet, such as to an external database. So the paid instance is the realistic starting point |
+- **Before merging,** repeat those checks on the 16.x that's current then, including cold starts.
+- **Question for the sponsor: does upstream move to 16 too?** If the fork moves first, every upstream sync conflicts on `package.json` and the lockfile.
 
-Netlify's compute assumes 1 GB of memory (its default) and 50 ms per function call, which hasn't been measured. Workers Paid is per account, so the landing page would share it, at no extra cost. The arithmetic is reproducible from the inputs above.
+## 6. Alternatives considered
 
-**A second reading of the same figures.** Treat the 12,110 as the app's HTTP requests rather than its page views, with the following inputs:
+At standard pricing, as the sponsor asked (#11, 6 November). Vercel is excluded by #34.
 
-- 100 KiB each;
-- every request running the server;
-- 4 deploys a month;
-- Netlify functions at 1 GB for 100 ms.
+| Option                       | What it offers                                                                                                                                              | Why it wasn't chosen                                                                                                                                                                                                                                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cloudflare Workers Free only | $0 for everything except the media worker                                                                                                                   | Free only while traffic and CPU stay inside it; the media worker still needs Paid or another host                                                                                                                                                               |
+| Render                       | Runs the app as it is                                                                                                                                       | Kept as the fallback. About $28 a month for four services, plus bandwidth and R2 for files                                                                                                                                                                      |
+| Google Cloud Run             | Every layer as a container, `ffmpeg` included. Free each month for request-based services: 2 million requests, 180,000 vCPU-seconds and 360,000 GiB-seconds | Jobs, which the media worker would be, have their own allowance, and outbound data isn't part of either. Needs a billing account, and free usage counts across everything on it. Idle services sleep, so there are cold starts. A new account, pipeline and DNS |
+| Oracle Cloud Always Free     | One VM with 2 OCPUs and 12 GB, 200 GB of disk and 10 TB of outbound a month: the whole stack in Docker Compose                                              | Cut in half on 15 June 2026, so its free terms can change. Reclaims instances it considers idle: over 7 days, CPU, network and (on Arm) memory all under 20% at the 95th percentile. Someone has to patch and secure the server after the semester              |
+| Netlify                      | Next.js through its adapter                                                                                                                                 | Every project pauses when the month's credits run out. About $60 a month at 100× for the full app. Fixed outbound addresses, which a restricted database would need, are an Enterprise add-on                                                                   |
 
-Every cost falls, but the order doesn't change:
+**Bottom line:** on current evidence and standard prices, Cloudflare is the preferred platform:
 
-- **Cloudflare:** Free holds even at 100×, at about 40,000 Worker requests a day. Paid would be $5 flat.
-- **Netlify:** 91 credits at 1×, which is Free. 3,119 credits at 100×, which is Pro's $20 plus one $10 pack, so $30.
-- **Render:** $7 at 1×, and $24.85 at 100×, with 124 GB of bandwidth.
+- it's a low shared base on the sponsor's existing account, where the deploy token and the domain already are: $5 a month for every layer's Workers;
+- the free options trade money for server work (Oracle), or are free only until traffic grows (Cloud Run, Cloudflare Free).
 
-The first reading is the one used above, because it counts what a page view was measured to cost: 7 Worker requests, not 1. The cap on Free's 100,000 requests a day is reached sooner than a requests-only reading suggests. Either way, recalculate once the preview gives real requests, response sizes and durations.
+## 7. Cost
 
-## Reaching the hosted database
+**The full app.** It isn't published, so the cost model uses an **assumed baseline:** the sponsor's whole Cloudflare account over 30 days, 12,110 requests, each treated as one page view of the app. That's about 400 views a day at 1×, and 40,000 at 100×. One page view was measured at 7 Worker requests and about 129 KiB on a first visit. Appendix B has the model and its assumptions.
 
-What the sponsor said (#11, 2 November):
+|                            | Cloudflare Workers                                                                                                                                                          | Netlify                                                                            | Render                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1×                         | **$0** on Free, if requests stay within its CPU and daily limits; otherwise $5 on Paid                                                                                      | $0 at 7 deploys a month; $9 at 20                                                  | $7                                                               |
+| 100×                       | **About $5–6** on Paid                                                                                                                                                      | About $60 (Pro's base plus four $10 packs)                                         | About $30                                                        |
+| Free ends                  | When the account's busiest day passes 100,000 requests (about 30–35× the assumed baseline, if traffic is spread evenly), or with requests that keep going over 10 ms of CPU | When the month's 300 credits run out; then every project pauses                    | Free sleeps and isn't meant for production, so $7 from the start |
+| Reaches Supabase           | Direct, or through Hyperdrive (section 2)                                                                                                                                   | Through the pooler, if the database has no allow-list                              | Through the pooler; allow-listable ranges                        |
+| Deployed by GitHub Actions | `wrangler deploy` with the existing token, as for the landing page                                                                                                          | `netlify deploy --prod --no-build`, with a token and site ID as repository secrets | An image built in Actions, deployed by a deploy hook             |
 
-- **Provider:** Supabase, in `us-west-2`, with PostGIS enabled.
-- **How to connect:** through Supabase's connection pooler, with a URL and a password, like any Postgres database.
-- **Not checked yet:** whether it needs an allow-list or TLS, and whether a Worker can connect.
+Reading the 12,110 as requests rather than page views lowers every figure, but the order stays the same: Cloudflare $0–5, Render $24.85, Netlify $30. The numbers are recalculated once the preview gives real traffic.
 
-What Supabase documents:
+**All three layers: starting prices.**
 
-- **The shared pooler (Supavisor) works over IPv4 on every plan:**
-  - transaction mode (port 6543), recommended for serverless and edge code;
-  - session mode (port 5432), for persistent servers.
-- **The direct connection is IPv6** on the Free and Pro plans, unless the IPv4 add-on is bought.
-- **Prepared statements:** the shared pooler doesn't support them in transaction mode. The read model's one query has no parameters. Da2's seed script uses parameters, so it should seed through session mode.
-- **Owner settings:** SSL enforcement and network restrictions are settings the project owner turns on in the dashboard. Whether they're on is the open allow-list and TLS question.
+|                  | Cloudflare                                                                                         | Render                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Hosting          | $5 account base                                                                                    | About $28 (four $7 services, if each fits)       |
+| Media processing | Inside the included container amounts at light use; 100 hours of `basic` at full CPU adds about $2 | One of the four services                         |
+| Transcription    | Workers AI, if the chosen model runs there: free within 10,000 Neurons a day across all models     | Workers AI through its API, or a bigger instance |
+| Files            | R2: free within 10 GB-months and the included operations                                           | R2 too                                           |
+| Database         | One Supabase project, on the sponsor's plan                                                        | The same                                         |
 
-What that means for each host:
+These are starting points. The total depends on the media processed, the files kept, the audio transcribed and the text translated, and on what the other layers' real code needs.
 
-- **Cloudflare:** to test with the test Worker, in this order:
-  1. **`pg` over a Worker socket to the transaction pooler.** Worker sockets connect from addresses outside Cloudflare's published ranges, so this only works if network restrictions are off.
-  2. **Hyperdrive,** which connects from Cloudflare's published ranges, so a restricted database can allow them. Cloudflare's Supabase guide asks for the direct connection string, which is IPv6 on Supabase's Free and Pro plans, so whether Hyperdrive reaches it is part of the test.
-- **Netlify:** Node functions with `pg` to the transaction pooler.
-  - **Region:** functions run in Ohio by default, and changing the region needs Pro.
-  - **Addresses:** their outbound addresses change as Netlify scales, and fixed ones are an Enterprise add-on, so this only works if the database has no allow-list.
-  - **Connection string:** it must be set in Netlify's UI, CLI or API, not in `netlify.toml`, which functions can't read. By default a variable reaches every scope, including functions; on Pro, if scopes are narrowed, they must include Functions. A changed value needs a new deploy.
-- **Render:** the session pooler URL in `DATABASE_URL`, exactly as locally, from the Oregon region. Render services send outbound traffic from regional IP ranges shown in the dashboard, so a database allow-list can include them.
+## 8. What happens next
 
-So a restrictive database policy could change which option is viable. Its access rules decide the method, and have to be known first.
+| When                       | What                                                                                                               | Who                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| 7–8 Nov                    | Database access, and answers in #11: the settings, the plan, and how the connection details arrive                 | Sponsor             |
+| 8 Nov                      | Decision on the platform and the account base, from this proposal                                                  | Sponsor             |
+| Early in the week of 9 Nov | The test Worker: a connection to Supabase, CPU on Cloudflare, and a query with `$1` parameters. Then it's removed  | Platform, with Data |
+| Week of 9 Nov              | The CI database job, and the Next.js 16 pull request                                                               | Platform            |
+| After both pass            | P7 publishes the full app; P6 gives it its address on `sagasproject.org`                                           | Platform            |
+| Week of 16 Nov             | Meet the other teams. Turn section 3 into a plan for their real code, including how jobs reach the media container | Team                |
 
-**Left open, at the sponsor's request:** how Data gets database access, and how the connection details reach the pipeline. He'll post in #11 when he knows. The likely shape is:
+If the test Worker can't reach the database, the sponsor looks at the decision again, with Render as the fallback.
 
-- **CI:** the pooler URL as a GitHub secret.
-- **Runtime:** a Worker secret or a Hyperdrive configuration on his account. The pipeline's token can only edit Workers.
+---
 
-**One more question for later:** which Supabase plan the project is on. Free projects pause after 7 days of low activity. A preview that only queries when a fresh Worker starts may not keep it awake, and a paused database would take the preview down. Paid projects don't pause.
+## Appendix A: Evidence
 
-## The contract update
+**Next.js 16.4.5, adapter 1.20.16, `main` at contract 2.7.0 (6 November).** Local `workerd`, against Postgres 16 seeded with the 24 fixture states. Warm requests, after the first:
 
-Upstream released contract 2.5.0 on 1 November and 2.6.0 on 3 November. The fork is still on 2.4.0 (#46). The evidence here is for 2.4.0.
+| Route                       | Median / p95 | Max   |
+| --------------------------- | ------------ | ----- |
+| `/` (from the cache)        | 2 / 3 ms     | 4 ms  |
+| `/api/sites`                | 2 / 3 ms     | 6 ms  |
+| `/api/sites/freight-depot`  | 3 / 4 ms     | 6 ms  |
+| `/dev`, freight depot t0–t3 | 18 / 22 ms   | 28 ms |
 
-Neither release changes anything this proposal depends on:
+- **Twelve simultaneous first requests:** all succeeded, in 0.02–0.38 s.
+- **Bundle:** 5,083 KiB uncompressed (1,070 KiB gzip), against a 64 MiB limit. Cloudflare removed the compressed limit on 4 September 2026.
+- **CI:** a clean install, the fixtures, typecheck, lint, acceptance and tests across the workspace all passed.
 
-- dependencies, the lockfile or Next.js;
-- the app's configuration;
-- `/dev` or the fixture loader;
-- the Platform and Data stories.
+**Earlier runs:**
 
-The sync belongs in its own pull request, with the database re-seeded afterwards. The hosting checks are then repeated on the result, using the same test setup, which still applies. P4 does none of that itself.
+| Run                                                               | `/`                                            | APIs       | `/dev` article          |
+| ----------------------------------------------------------------- | ---------------------------------------------- | ---------- | ----------------------- |
+| Next.js 15.5.28, adapter 1.20.13 (30 October)                     | 2.5 / 4 ms; 16 / 20 ms when rendered each time | 3 / 4–5 ms | 15 / 22 ms              |
+| Next.js 16.4.2, adapter 1.20.12 (30 October)                      | 2 / 4 ms                                       | 2 / 4–5 ms | 18 / 22 ms              |
+| Second machine (WSL, the team's Docker database), Next.js 15.5.28 | 4–6 ms                                         | 4–6 ms     | 11–16 ms (median 12–13) |
 
-## Still open
+**What the runs show:**
 
-**Before asking the sponsor to agree to the choice:**
+- **Data barely matters.** On the second machine, `/dev` took nearly the same time for the lightest fixture (corner shop at t0) and the richest (freight depot at t3): 12 against 13 ms. Most of the time goes to rendering the page, not its data.
+- **The browser check matched plain Node,** on both 15.5.28 and 16.4.5:
+  - the pages render, and query parameters choose the site and state;
+  - client-side navigation, refresh and the back button work;
+  - a missing page and an unknown site both give 404.
 
-- [x] Record the sponsor's database and traffic facts, with his warnings.
-- [x] Compare the three hosts, with a 1×/100× cost model and its assumptions stated.
-- [x] Scope the local evidence to the routes that exist today.
-- [ ] Team review of the assumptions, the evidence and the conditional recommendation.
+  Both runtimes showed the same 404s for prefetches of `/sites/<slug>`, links to pages that aren't built yet (M4 adds them).
 
-**Before P7 publishes anything, or for the approved test Worker:**
+**How it was run:**
 
-- [ ] **Database access, and how the details reach the pipeline.** The sponsor asked to leave them open; he'll post in #11.
-- [ ] **Whether the database needs an allow-list or TLS.** The sponsor hasn't checked; it decides the connection method.
-- [ ] **CPU time on Cloudflare itself.** The sponsor approved a temporary test Worker on `workers.dev`, with fixture data and no route, deployed from GitHub Actions and removed afterwards. It waits on database access, so it shouldn't be asked for again.
-- [ ] **Which Supabase plan the project is on** (pausing, above).
-- [ ] **The checks repeated on the version to be published,** including the site pages once they exist and the contract sync.
-- [ ] **The account's daily headroom confirmed.** If Free can't carry the workload, ask for approval for Paid or reconsider the fallback.
+1. Postgres 16 on port 5435, seeded with `pnpm --filter @sagas/ui-api db:seed`.
+2. The five changes in section 1, with `open-next.config.ts` and a local-only `wrangler.jsonc` (flags `nodejs_compat` and `global_fetch_strictly_public`).
+3. `opennextjs-cloudflare build`, then `opennextjs-cloudflare populateCache local`.
+4. The bundle measured with `wrangler deploy --dry-run`, which uploads nothing.
+5. The app served with `wrangler dev`. The timings came from its request traces, and the browser check used Playwright's Chromium.
 
-Netlify and Render are compared from their current documentation and our local tests, not by deploying to them. Deploying would need accounts, and sign-ups are the sponsor's. #34 also says nothing is deployed in P4.
+Nothing was deployed, and no account was used.
 
-Netlify's Free plan and Render's Hobby workspace each allow one dashboard member. That fits a sponsor-owned account with deploys from Actions, as on Cloudflare. Team dashboard access would need a paid plan, for example Render Pro at $25/month plus compute.
+## Appendix B: Cost model
 
-Three options cover the three ways to run this app: an adapter at the edge (Cloudflare), serverless functions (Netlify), and a plain Node server (Render). The story allows three or four, so a fourth wasn't added.
+**Inputs:**
 
-## How the test was run
+- **Traffic (sponsor, #11, 2 November):** 12,110 requests, 4,990 Worker invocations, no errors, and a CPU p90 of 569 µs over 30 days, for the whole account.
+  - Cloudflare can't show `sagas-landing` alone, and the busiest day (11 October) was before the landing page went live.
+  - These are not page views, and the p90 is not an average to multiply. Treating each request as a page view is a planning assumption.
+- **Per page view (measured locally):**
+  - 7 Worker requests: the page, plus Next.js prefetching the 6 site links on it (8 on the home page);
+  - 14 requests in all on a first visit;
+  - about 129 KiB on a first visit (0.4–10 KiB on a repeat).
 
-On a clean copy of `main` (`cf27878`):
+  The 6 prefetches are of site pages that don't exist yet, so today they return 404. Once those pages exist, and as interactions such as passovers arrive, the requests and bytes per view will change.
 
-1. Started Postgres 16 on port 5435 and ran `pnpm --filter @sagas/ui-api db:seed`.
-2. Moved `apps/web` to Next.js 15.5.28 and added `@opennextjs/cloudflare@1.20.13` and `wrangler@4.151.0` as dev dependencies. Also added `open-next.config.ts` and a local-only `wrangler.jsonc` (flags `nodejs_compat` and `global_fetch_strictly_public`). The landing page's lockfile resolves Wrangler to 4.151.1, so P7 should use the same version for both.
-3. Made changes 2 to 5 above.
-4. Ran `opennextjs-cloudflare build` (no override flag) and `opennextjs-cloudflare populateCache local`.
-5. Measured the bundle with `wrangler deploy --dry-run --outdir`, which uploads nothing.
-6. Served the app with `wrangler dev`. Timings came from its local request traces; the browser check used Playwright's Chromium.
-7. Ran CI on the result: a clean install, the fixtures, typecheck, lint, acceptance and tests for the whole workspace, and the landing page's build, release build and dry run. All passed.
+- **Assumed CPU per view, for pricing:**
+  - 35 ms with pre-built pages: 7 requests at 5 ms each (5 ms rounds up the local p95 for a cached page or an API call);
+  - 46 ms with one page rendered on each request: 16 ms (the local median for the home page rendered each time), plus 6 requests at 5 ms.
 
-The whole Next.js 15 run was repeated on `main` after the contract 2.4.0 sync (`3e40453`), with the database re-seeded. The results:
+  These are assumptions, not measured limits. Twice as much CPU would add about $1 a month at 100×.
 
-- the same changes applied, and CI passed;
-- all twelve simultaneous first requests succeeded;
-- the freight depot, the richest fixture, rendered on `/dev` in a median of 16 ms (p95 21 ms).
+- **Deploys:** 7 merges changed app code from 3 October to 2 November; 20 is also shown.
 
-The same setup was then applied on a second machine, in its own git worktree and local branch, never pushed. It was built and served there with the same commands, giving the second-machine table above.
+|            | 1× (about 400 views a day)                                     | 100× (about 40,000 views a day)                                                                                   |
+| ---------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Cloudflare | $0 on Free: about 2,800 Worker requests a day, against 100,000 | $5.25–5.51 on Paid: 8.5 million requests (10 million included); 42–56 million CPU-ms (30 million included)        |
+| Netlify    | 183 credits at 7 deploys (Free, 300); 378 at 20 (Personal, $9) | About 7,900–8,100 credits: Pro's base ($20 when checked on 3 November) plus four packs of 1,500 at $10, about $60 |
+| Render     | $7: 1.6 GB of the 5 GB included                                | About $30: $7 plus 160 GB at $0.15 beyond 5 GB                                                                    |
 
-Page weight was measured with Playwright's Chromium against plain `next start` on `main` (`3e40453`). It recorded:
+- **Netlify's compute** assumes its default 1 GB and an unmeasured 50 ms per call.
+- **Second reading,** with the 12,110 as the app's requests rather than page views (100 KiB each, 4 deploys, 100 ms per Netlify call):
+  - Cloudflare: the average day fits Free even at 100×, at about 40,000 Worker requests. That holds only if the whole account's busiest day also stays under 100,000 requests, and every request within Free's CPU limit, which a low monthly volume can't settle.
+  - Netlify: 91 and 3,119 credits, so $0 and $30.
+  - Render: $7 and $24.85.
 
-- a first and a repeat visit to `/` and to `/dev?site=freight-depot&state=t3`;
-- the size of a `/sites/<slug>` prefetch.
+## Appendix C: Sources
 
-The Next.js 16.4.2 run used adapter 1.20.12 and the same changes. Nothing was deployed, and no account was used.
-
-## Sources
-
-- **Sponsor:** answers in #11 on 2 November 2026: the database provider and connection, the account traffic, and the test Worker.
+- **Sponsor:**
+  - #11 on 2 November: the database, the account traffic, and the test Worker.
+  - #11 on 6 November: the decision on 8 November, one project with a shared model, and standard pricing.
+  - The 6 November meeting and email.
+- **Upstream starter code (Civum/sagas):**
+  - `SETUP.md`;
+  - `apps/capture-api/README.md` (jobs, models and licences), `src/db.ts` and `package.json`;
+  - `apps/graph-api/package.json`;
+  - `packages/contracts/src/model.ts`.
+- **The fork:** `apps/web/BACKLOG.md` (Da8, Da10), `apps/web/README.md` and the SRS draft (`/dev`).
 - **Cloudflare:**
-  - [Workers limits](https://developers.cloudflare.com/workers/platform/limits/).
-  - [The 4 September 2026 change](https://developers.cloudflare.com/changelog/post/2026-09-04-increased-worker-size-limit/) that removed the compressed limit.
   - [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/).
+  - [Workers limits](https://developers.cloudflare.com/workers/platform/limits/).
+  - [The 4 September size-limit change](https://developers.cloudflare.com/changelog/post/2026-09-04-increased-worker-size-limit/).
   - [Static assets billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/).
   - [TCP sockets](https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/).
   - [Hyperdrive pricing](https://developers.cloudflare.com/hyperdrive/platform/pricing/).
-  - [Hyperdrive firewall and networking](https://developers.cloudflare.com/hyperdrive/configuration/firewall-and-networking-configuration/).
+  - [Hyperdrive networking](https://developers.cloudflare.com/hyperdrive/configuration/firewall-and-networking-configuration/).
   - [Hyperdrive with Supabase](https://developers.cloudflare.com/hyperdrive/examples/connect-to-postgres/supabase).
-  - [Workers file system](https://developers.cloudflare.com/workers/runtime-apis/nodejs/fs/).
+  - [Containers pricing](https://developers.cloudflare.com/containers/platform/pricing/).
+  - [Containers limits](https://developers.cloudflare.com/containers/platform/limits/).
+  - [R2 pricing](https://developers.cloudflare.com/r2/pricing/).
+  - [Queues on Free](https://developers.cloudflare.com/changelog/2026-02-04-queues-free-plan/).
+  - [Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/).
+  - [Express on Workers](https://developers.cloudflare.com/workers/tutorials/deploy-an-express-app/).
 - **OpenNext:**
+  - [Adapter overview](https://opennext.js.org/cloudflare).
   - [Release 1.20.13](https://github.com/opennextjs/opennextjs-cloudflare/releases/tag/@opennextjs%2Fcloudflare@1.20.13).
-  - [Cloudflare adapter overview](https://opennext.js.org/cloudflare). Its 3 MiB and 10 MiB limits predate Cloudflare's 4 September change.
-  - [Performance](https://opennext.js.org/cloudflare/perf).
+  - [Caching and performance](https://opennext.js.org/cloudflare/perf).
   - [Databases](https://opennext.js.org/cloudflare/howtos/db).
   - [Packages with workerd-specific code](https://opennext.js.org/cloudflare/howtos/workerd).
-- **Netlify:**
-  - [Pricing](https://www.netlify.com/pricing/).
-  - [Credit-based plans](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/), updated 30 October 2026.
-  - [Paused projects](https://docs.netlify.com/manage/accounts-and-billing/billing/resume-paused-projects/).
-  - [Next.js on Netlify](https://docs.netlify.com/frameworks/next-js/overview).
-  - [Functions configuration](https://docs.netlify.com/build/functions/configuration/): 1,024 MB default memory, Ohio as the default region, region changes on Pro.
-  - [CLI in CI](https://docs.netlify.com/api-and-cli-guides/cli-guides/get-started-with-cli/).
-  - [CLI v21](https://www.netlify.com/changelog/2025-05-06-cli-v21-0-0/): `netlify deploy` builds by default, and `--no-build` skips it.
-  - [Environment variables with functions](https://docs.netlify.com/build/functions/environment-variables/): scopes, and why `netlify.toml` values don't reach functions.
-  - [Private connectivity](https://docs.netlify.com/security/private-connectivity): function addresses change by default, and static ones are an Enterprise add-on.
-- **Render:**
-  - [Pricing](https://render.com/pricing).
-  - [New workspace plans](https://render.com/docs/new-workspace-plans): Hobby bandwidth 5 GB, down from 100 GB, from 1 August 2026.
-  - [Free instances](https://render.com/docs/free): sleeping, monthly limits, and suspension of Free services that send unusually high traffic, including to an external database.
-  - [Deploy hooks](https://render.com/docs/deploy-hooks).
-  - [Deploys](https://render.com/docs/deploys): Auto-Deploy set to Off.
-  - [Regions](https://render.com/docs/regions).
-  - [Outbound IP addresses](https://render.com/docs/static-outbound-ip-addresses): regional ranges, shown in the dashboard.
+- **Next.js:** [support policy](https://nextjs.org/support-policy).
+- **node-postgres:** [queries and prepared statements](https://node-postgres.com/features/queries).
 - **Supabase:**
+  - [Pricing](https://supabase.com/pricing).
   - [Connecting to Postgres](https://supabase.com/docs/guides/database/connecting/connecting-to-postgres).
+  - [Network restrictions](https://supabase.com/docs/guides/platform/network-restrictions).
   - [Project pausing](https://supabase.com/docs/guides/platform/project-pausing).
   - [Production checklist](https://supabase.com/docs/guides/deployment/going-into-prod).
-- **Next.js support:** the [support policy](https://nextjs.org/support-policy). Next.js 15's Maintenance LTS was extended beyond its original end date of 21 October 2026, with security releases until 31 January 2027.
+- **Render:**
+  - [Pricing](https://render.com/pricing).
+  - [New workspace plans](https://render.com/docs/new-workspace-plans).
+  - [Free instances](https://render.com/docs/free).
+  - [Outbound IP addresses](https://render.com/docs/static-outbound-ip-addresses).
+  - [Deploy hooks](https://render.com/docs/deploy-hooks).
+  - [Deploying an image](https://render.com/docs/deploying-an-image).
+  - [Regions](https://render.com/docs/regions).
+- **Netlify:**
+  - [Pricing](https://www.netlify.com/pricing/).
+  - [Credit-based plans](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/).
+  - [Paused projects](https://docs.netlify.com/manage/accounts-and-billing/billing/resume-paused-projects/).
+  - [Next.js on Netlify](https://docs.netlify.com/frameworks/next-js/overview).
+  - [Private connectivity](https://docs.netlify.com/security/private-connectivity).
+- **Alternatives:**
+  - [Cloud Run pricing](https://cloud.google.com/run/pricing).
+  - [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/resourceref.htm).
+  - [InfoQ on the Oracle change](https://infoq.com/news/2026/07/oracle-cloud-free-tier-limits/).
+- **Earlier proposal:** [P2](./P2-hosting-and-domain-proposal.md).
