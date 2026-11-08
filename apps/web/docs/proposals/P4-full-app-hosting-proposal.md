@@ -2,13 +2,21 @@
 
 - **For:** the sponsor's hosting decision on 8 November 2026
 - **Workstream:** Platform. **Issues:** P4 #34; the address is P6 #35
-- **Status:** Final. Two checks wait on database access, which the sponsor is setting up on 7–8 November: CPU time on Cloudflare itself, and a Worker reaching the database. The test Worker runs both in the first days of the following week. The other layers are confirmed later, against the teams' real code.
+- **Status:** Ready for the sponsor's decision on 8 November, conditional on validation before deployment. Two checks validate it: a Worker reaching the database, and CPU time on Cloudflare itself. They need database access, which the sponsor is setting up on 7–8 November. They run in the first days of the following week, under the rule in section 2. The other layers' deployment and sizing are confirmed later, against the teams' real code.
 - **Research:** 30 October to 6 November 2026. Retested on `main` at contract 2.7.0 on 6 November
 - **Currency:** USD; standard pricing; taxes and currency conversion excluded
 
 ## Recommendation
 
-**What's asked on Sunday:** the platform, and the $5 account base. How each layer fits, and what the whole project costs to run, are confirmed as the other teams' code becomes available.
+**What's asked on Sunday:**
+
+- **The full app (`apps/web`) on Cloudflare Workers** (items 1 and 5).
+- **Cloudflare as the platform for every layer, with Workers Paid as the shared $5 account base** (items 2 and 3). The sponsor asked for the other layers in this write-up, and they share one account, one database and one Workers allowance with the full app.
+
+**What follows, without holding up Sunday's decision:**
+
+- **Validation before deployment.** The test Worker checks the database connection and CPU (section 2). If a connection problem is confirmed, the sponsor looks at the decision again, with Render as the fallback.
+- **The other layers' deployment and sizing,** and what the whole project costs to run. These are confirmed against the teams' real code after the week of 16 November.
 
 1. **Host the full app on Cloudflare Workers,** as a second Worker beside `sagas-landing` on the sponsor's account, deployed only by GitHub Actions. At the assumed baseline traffic it fits Workers Free, if its requests stay within Free's CPU limit and the account's busiest day stays under 100,000 requests.
 2. **Host the other layers on the same account:**
@@ -24,7 +32,7 @@
 
 3. **Transcription can avoid a container,** if the content team picks a model that Workers AI runs, such as Whisper, at $0.0005 per audio minute. The content team chooses the models.
 4. **Move to Next.js 16** in its own pull request, before the full app is published (P7).
-5. **Decide on Sunday, then confirm with the test Worker.** The sponsor decides from this proposal on 8 November. Once database access is up, the test Worker checks that a Worker can reach the database. If it can't, the decision is looked at again, with **Render** as the fallback. Render's starting prices are known: $7 a month per service.
+5. **Decide on Sunday, then confirm with the test Worker.** The sponsor decides from this proposal on 8 November. Once database access is up, the test Worker checks that a Worker can reach the database. If a connection problem is confirmed, the decision is looked at again, with **Render** as the fallback. Render's starting prices are known: $7 a month per service. Section 2 gives the rule for Workers Free, Workers Paid or Render.
 
 | What the sponsor asked about                      | Finding                                                                                                                                                                                                                                             | Status                                                                                  |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -101,13 +109,34 @@ The app stays portable whichever host is chosen. It reaches the database through
 | **Hyperdrive**, Cloudflare's connection pool                               | Restrictions are off, or allow Cloudflare's published ranges | Cloudflare's guide uses Supabase's direct connection, which is IPv6-only on Supabase Free and Pro unless the IPv4 add-on is bought, so that is part of the test. Included in Free (100,000 queries a day) and Paid (unlimited) |
 | **Render** (the fallback)                                                  | Restrictions are off, or allow Render's outbound ranges      | Render services use regional outbound IP ranges, shown in its dashboard. `pg` connects exactly as it does locally, from Oregon, next to `us-west-2`                                                                            |
 
-**The plan:**
+**The test Worker validates the decision before the full app is deployed.** It runs in the first days of next week, once access is up:
 
-1. **The sponsor decides on Sunday,** from this proposal.
-2. **The test Worker confirms the connection** in the first days of next week, once access is up. It also measures CPU, and runs a query with `$1` parameters, as passover writes will.
-   - `pg`'s ordinary parameterized queries are expected to work through the transaction pooler.
-   - Named prepared statements aren't supported there, so the app doesn't use them.
-3. **If the test Worker can't reach the database,** the sponsor looks at the decision again, with Render as the fallback (#11, 6 November).
+- it's the full app as built for P7, with `/dev` included, since the preview serves it;
+- it has fixture data only, no route, and runs on Workers Free;
+- it's removed afterwards.
+
+Those are the sponsor's conditions (#11, 2 November).
+
+| Check      | How                                                                                                                                                                                                                                                                                                              | Result                                                                                                                                                                                                                                                                                                          |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Connection | A query with `$1` parameters, as passover writes will use. First direct through the transaction pooler; then through Hyperdrive, once its configuration and any allow-listing are set up                                                                                                                         | **Passes:** either route returns the expected rows. **Fails:** both routes are set up and checked, and neither connects. **Pending:** a route can't be tried yet, such as Hyperdrive without its configuration                                                                                                  |
+| CPU        | Each route the preview serves, requested 100 times, one route at a time. The first, cold requests are reported apart from the warm ones. CPU time comes from Workers Logs, which records it for each invocation; it's turned on in the test Worker's configuration, and the sponsor can read it in the dashboard | Reported per route: whether every response was the expected one, any invocations with the status `exceededCpu` (Cloudflare's CPU-limit outcome; error 1102 alone can also mean other resource limits), and the observed p99 CPU. **Our target is a p99 under 8 ms:** headroom we chose below Free's 10 ms limit |
+
+`pg`'s ordinary parameterized queries are expected to work through the transaction pooler. Named prepared statements aren't supported there, so the app doesn't use them.
+
+**The decision rule:**
+
+1. **The connection fails** (both routes set up and checked): the sponsor looks at the decision again, with Render as the fallback (#11, 6 November).
+2. **The connection is pending:** finish setting up the route and retest. Nothing is decided on a route that couldn't be tried.
+3. **A route returns unexpected responses,** such as an HTTP 500 or the wrong data: diagnose and retest before P7, however fast it was.
+4. **The connection passes, and every route returns the expected responses, with no `exceededCpu`, and meets the CPU target:** the full app can run on Workers Free until the containers arrive.
+5. **The connection passes and the responses are right, but a route misses the target.** Missing 8 ms doesn't by itself make Free unsuitable: Cloudflare tolerates occasional overruns. Two responses are reasonable:
+   - optimise the route, or build it ahead of time, and retest;
+   - or choose Workers Paid ($5) for margin, which the containers need anyway.
+
+   Invocations that end as `exceededCpu` mean Paid, or a change to that route, before deployment.
+
+`/dev`, at 18 ms locally, is the route most likely to miss. If it needs Paid, that's a requirement of the preview's configuration. The public article pages are measured separately, when M4 builds them.
 
 **The database layout** (sponsor, #11, 6 November):
 
@@ -126,7 +155,7 @@ The app stays portable whichever host is chosen. It reaches the database through
 
 ## 3. Hosting all three layers
 
-This lists each layer's parts, from the upstream starter code. The other teams' real code is seen at the meetings in the week of 16 November, so this is a plan to confirm, not a commitment.
+Sunday's decision covers the platform for these layers; their deployment and sizing are confirmed later. This lists each layer's parts, from the upstream starter code. The other teams' real code is seen at the meetings in the week of 16 November, so this is a plan to confirm, not a commitment.
 
 | Part                                 | What it is (upstream)                                                                    | On Cloudflare                                                                                                                                                                                      | Cost                                                                                                                                                                                                                                                      |
 | ------------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -231,13 +260,13 @@ These are starting points. The total depends on the media processed, the files k
 | When                       | What                                                                                                               | Who                 |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------- |
 | 7–8 Nov                    | Database access, and answers in #11: the settings, the plan, and how the connection details arrive                 | Sponsor             |
-| 8 Nov                      | Decision on the platform and the account base, from this proposal                                                  | Sponsor             |
-| Early in the week of 9 Nov | The test Worker: a connection to Supabase, CPU on Cloudflare, and a query with `$1` parameters. Then it's removed  | Platform, with Data |
+| 8 Nov                      | Decision on the full app's host, and on Cloudflare with the $5 account base for every layer                        | Sponsor             |
+| Early in the week of 9 Nov | The test Worker, under the decision rule in section 2. Then it's removed                                           | Platform, with Data |
 | Week of 9 Nov              | The CI database job, and the Next.js 16 pull request                                                               | Platform            |
 | After both pass            | P7 publishes the full app; P6 gives it its address on `sagasproject.org`                                           | Platform            |
 | Week of 16 Nov             | Meet the other teams. Turn section 3 into a plan for their real code, including how jobs reach the media container | Team                |
 
-If the test Worker can't reach the database, the sponsor looks at the decision again, with Render as the fallback.
+If the test Worker confirms a connection problem, the sponsor looks at the decision again, with Render as the fallback.
 
 ---
 
