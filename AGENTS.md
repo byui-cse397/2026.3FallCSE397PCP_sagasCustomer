@@ -9,11 +9,25 @@ When in conflict `apps/web/STATEMENT-OF-WORK.md` supersedes `docs/START-EXPERIEN
 ## Vocabulary (contract 2.7.0)
 
 Training data and older copies of this repo use outdated terms. Use these.
-The full definitions are under "Terms" in `docs/START-EXPERIENCE-LAYER.md`
-and in `packages/contracts/src/model.ts`. If
-`packages/contracts/src/version.ts` names a newer version than the heading
-above, read the root `CHANGELOG.md` entries since 2.7.0 first: they win over
-this section.
+
+`packages/contracts/src/model.ts` is the authority for every type and field,
+because it is what the code is type-checked against, and the root
+`CHANGELOG.md` says what each version changed. This section summarizes them at
+2.7.0. Read `docs/START-EXPERIENCE-LAYER.md` for the product and how we work,
+not for field shapes. The files under `docs/` come from upstream, and some of
+their wording is older than the code. Where they disagree with `model.ts` or
+this section, `model.ts` and this section win. Don't rewrite them in this fork,
+so upstream syncs stay clean; point out the mismatch in your PR instead.
+
+A known case: the start guide says "a `recordId` on a claim" means contract
+1.0.0. It means the old top-level `claim.recordId`. In 2.7.0,
+`target.recordId`, `sourceRecordId` and `evidence[].recordId` are all correct.
+
+If `packages/contracts/src/version.ts` in your working tree names a newer
+version than the heading above, the fork has synced past this file. Read the
+root `CHANGELOG.md` entries since 2.7.0 first: they win over this section.
+Watching upstream for new versions isn't your job; the upstream contract watch
+workflow opens an issue when there is one.
 
 - **Claim** — somebody's reading of a record. Every claim has a `target` (one
   claim or one record: `claimId` or `recordId`) and a `relation`, `extension`
@@ -38,9 +52,10 @@ this section.
 - **Rendering** — a transcript or translation. It is a record with `parent`
   set (`parent.role`). Several may coexist; none is authoritative. A rendering
   can be disputed; a record that stands on its own can only be extended.
-- **Passover** — `sounds_right`, `dont_know` or `dont_care` on a claim
-  (`claimState.passover`). "Sounds right" replaced affirmations: there is no
-  affirmation object or count.
+- **Passover** — a reader's `sounds_right`, `dont_know` or `dont_care` on a
+  claim. Each one is a `passover` record: `{ id, claimId, contributorId, kind,
+  createdAt }`. `claimState.passover` is only the calculated count of each
+  kind. "Sounds right" replaced affirmations: there is no affirmation object.
 - **State** — `graphState` is a place as of a time. It has `asOf` and no
   `stateId` or `label`. The fixtures' moments `t0` to `t3` keep their id and
   label on `FixtureState`, a fixtures-only type. Key anything on `asOf`.
@@ -135,9 +150,15 @@ own branch and pull request by one person. Do not run `git pull upstream`,
   whatever `DATABASE_URL` is set. Never save the hosted (Supabase) connection
   string in a `.env` file or export it in a shell. Loading the hosted database
   is a deliberate step a person takes; an agent never does it on its own.
-- The hosted connection string contains the database password. It lives only
-  in the repository secret `SUPABASE_DATABASE_URL`. Never ask for it, print it,
-  or write it into a file, a commit, an issue or a pull request.
+- The app only ever reads `DATABASE_URL` (`packages/read-model`). For the
+  hosted connection string, the deployment source is the GitHub repository
+  secret `SUPABASE_DATABASE_URL`; deployment installs it as the Worker secret
+  `DATABASE_URL`. The separate name requires an explicit mapping. CI jobs using
+  throwaway databases must not map the hosted secret. The workflows that deploy
+  the app (the P4 test Worker, then P7) will do the mapping. No such workflow
+  exists yet.
+- The hosted connection string contains the database password. Never ask for
+  it, print it, or write it into a file, a commit, an issue or a pull request.
 
 ## Before every commit
 
