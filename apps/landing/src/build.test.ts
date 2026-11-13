@@ -19,15 +19,17 @@ describe('buildSite', () => {
 
   it('writes index.html and styles.css', async () => {
     out = await mkdtemp(path.join(tmpdir(), 'landing-'));
-    const { html, css } = await buildSite(out);
+    const { html, css, termsHtml } = await buildSite(out);
 
     expect(existsSync(path.join(out, 'index.html'))).toBe(true);
     expect(existsSync(path.join(out, 'styles.css'))).toBe(true);
+    expect(existsSync(path.join(out, 'terms', 'index.html'))).toBe(true);
     expect(html).toContain('<link rel="stylesheet" href="/styles.css">');
 
     // Tailwind generated the classes the page uses, and the tokens came along.
     expect(css).toContain('.bg-background');
     expect(css).toContain('--foreground:');
     expect(css).not.toContain('@tailwind');
+    expect(termsHtml).toContain('Sagas: provisional terms for contributors');
   });
 });

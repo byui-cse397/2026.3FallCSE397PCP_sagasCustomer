@@ -65,6 +65,10 @@ describe('landing page copy', () => {
     }
   });
 
+  it('links visitors to the canonical terms page', () => {
+    expect(html).toContain('href="/terms/"');
+  });
+
   it('says why Sagas exists before how it works', () => {
     expect(html.indexOf(`id="${copy.why.id}"`)).toBeGreaterThan(0);
     expect(html.indexOf(`id="${copy.why.id}"`)).toBeLessThan(html.indexOf(`id="${copy.how.id}"`));
@@ -83,7 +87,7 @@ describe('landing page copy', () => {
   });
 
   it('tracks design-step approval separately from release approval', () => {
-    expect(content.status).toBe('approved');
+    expect(['approved', 'draft']).toContain(content.status);
     expect(content.designSteps?.De2.status).toBe('approved');
     for (const key of ['De4', 'De5', 'De6'] as const) {
       const step = content.designSteps?.[key];

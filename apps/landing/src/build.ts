@@ -2,10 +2,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import postcss from 'postcss';
 import tailwindcss from 'tailwindcss';
+import { readTermsMarkdown, renderTermsMarkdown } from '@sagas/terms';
 
 import tailwindConfig from '../tailwind.config';
 import { content } from './content';
-import { renderPage } from './render';
+import { renderPage, renderTermsPage } from './render';
 
 const SRC = import.meta.dirname;
 
@@ -21,11 +22,14 @@ async function readCss(file: string): Promise<string> {
 }
 
 /**
- * Builds the static site into `outDir`: index.html and styles.css. This is
- * what gets deployed, and what the build test checks.
+ * Builds the static site into `outDir`: index.html, terms/index.html, and
+ * styles.css. This is what gets deployed, and what the build test checks.
  */
-export async function buildSite(outDir: string): Promise<{ html: string; css: string }> {
+export async function buildSite(
+  outDir: string,
+): Promise<{ html: string; css: string; termsHtml: string }> {
   const html = renderPage(content);
+  const termsHtml = renderTermsPage(renderTermsMarkdown(readTermsMarkdown()));
   const result = await postcss([tailwindcss(tailwindConfig)]).process(
     await readCss(path.join(SRC, 'styles.css')),
     { from: undefined },
@@ -33,6 +37,8 @@ export async function buildSite(outDir: string): Promise<{ html: string; css: st
 
   await mkdir(outDir, { recursive: true });
   await writeFile(path.join(outDir, 'index.html'), html);
+  await mkdir(path.join(outDir, 'terms'), { recursive: true });
+  await writeFile(path.join(outDir, 'terms', 'index.html'), termsHtml);
   await writeFile(path.join(outDir, 'styles.css'), result.css);
-  return { html, css: result.css };
+  return { html, css: result.css, termsHtml };
 }

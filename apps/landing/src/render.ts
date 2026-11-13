@@ -131,9 +131,29 @@ function footer(copy: PageCopy): string {
   return `<footer class="mx-auto max-w-5xl px-4 sm:px-6">
   <div class="flex flex-wrap justify-between gap-3 border-t border-border py-8 text-sm text-muted-foreground">
     <p class="font-semibold text-foreground">${e(copy.footer.wordmark)}</p>
-    <p>${e(copy.footer.status)}</p>
+    <p>${e(copy.footer.status)}${copy.footer.termsHref ? ` · <a href="${e(copy.footer.termsHref)}" class="underline underline-offset-4 ${FOCUS}">${e(FIXED_TEXT.termsLink)}</a>` : ''}</p>
   </div>
 </footer>`;
+}
+
+export function renderTermsPage(termsHtml: string): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terms · Sagas</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-10 focus:rounded focus:bg-background focus:px-3 focus:py-2 ${FOCUS}">${e(FIXED_TEXT.skipLink)}</a>
+  <main id="main" class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <p><a href="/" class="underline underline-offset-4 ${FOCUS}">Sagas</a></p>
+    <article class="prose prose-neutral mt-8 max-w-none">${termsHtml}</article>
+  </main>
+</body>
+</html>
+`;
 }
 
 export function renderPage(content: LandingContent): string {
