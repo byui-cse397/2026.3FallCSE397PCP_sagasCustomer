@@ -16,7 +16,7 @@
     "@sagas/contracts": "workspace:*",
     "@sagas/fixtures": "workspace:*",
     "mapbox-gl": "catalog:",
-    "next": "^15.1.6",
+    "next": "^16.4.6",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "@sagas/read-model": "workspace:*"
