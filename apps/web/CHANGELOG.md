@@ -15,6 +15,9 @@ conflict on a later pull.
 
 - What works now, in a sentence a visitor would understand. (#pull request number, who)
 ```
+## 2026-11-14
+
+- Visitors can open the shared contributor terms from the landing page and web app. (#64, Michael)
 
 ## 2026-11-03
 
