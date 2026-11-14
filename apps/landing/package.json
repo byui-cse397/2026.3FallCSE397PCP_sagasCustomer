@@ -12,9 +12,6 @@
     "lint": "eslint",
     "test": "vitest run"
   },
-  "dependencies": {
-    "@sagas/terms": "workspace:*"
-  },
   "devDependencies": {
     "@sagas/eslint-config": "workspace:*",
     "@sagas/prettier-config": "workspace:*",

@@ -191,10 +191,6 @@ importers:
         version: 3.2.7(@types/node@22.20.1)(happy-dom@21.0.4)(jiti@1.21.7)(tsx@4.23.12)
 
   apps/landing:
-    dependencies:
-      '@sagas/terms':
-        specifier: workspace:*
-        version: link:../../packages/terms
     devDependencies:
       '@sagas/eslint-config':
         specifier: workspace:*

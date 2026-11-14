@@ -65,10 +65,6 @@ describe('landing page copy', () => {
     }
   });
 
-  it('links visitors to the canonical terms page', () => {
-    expect(html).toContain('href="/terms/"');
-  });
-
   it('says why Sagas exists before how it works', () => {
     expect(html.indexOf(`id="${copy.why.id}"`)).toBeGreaterThan(0);
     expect(html.indexOf(`id="${copy.why.id}"`)).toBeLessThan(html.indexOf(`id="${copy.how.id}"`));
