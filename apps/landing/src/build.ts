@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import postcss from 'postcss';
 import tailwindcss from 'tailwindcss';
+
 import { readTermsMarkdown, renderTermsMarkdown } from '@sagas/terms';
 
 import tailwindConfig from '../tailwind.config';
@@ -10,13 +11,15 @@ import { renderPage, renderTermsPage } from './render';
 
 const SRC = import.meta.dirname;
 
-/** Inlines the local `@import './x.css'` lines, so the output is one file. */
+/** Inlines local workspace CSS imports, so the output is one file. */
 async function readCss(file: string): Promise<string> {
   const css = await readFile(file, 'utf8');
-  const imports = [...css.matchAll(/^@import '\.\/([\w.-]+\.css)';$/gm)];
+  const imports = [...css.matchAll(/^@import '([^']+\.css)';$/gm)];
   let out = css;
   for (const [line, name] of imports) {
-    if (name) out = out.replace(line, await readCss(path.join(SRC, name)));
+    if (name) {
+      out = out.replace(line, await readCss(path.resolve(path.dirname(file), name)));
+    }
   }
   return out;
 }

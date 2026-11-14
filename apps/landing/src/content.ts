@@ -18,7 +18,12 @@ import type { LandingContent } from './model';
 // visible label.
 
 export const content: LandingContent = {
-  status: 'draft',
+  status: 'approved',
+  approval: {
+    link: 'https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11#issuecomment-6278318879',
+    date: '2026-10-19',
+    copySha256: '3c870c03dd60b5e1997086526eb81c776c38dd625c5b50731d0e9c5497c908da',
+  },
   // De4 through De6 are sponsor-approved design passages, but remain outside
   // `copy` until the separate publication follow-up updates PageCopy, the
   // fingerprint, and the release record.
@@ -114,6 +119,6 @@ export const content: LandingContent = {
         email: 'info@civum.io',
       },
     },
-    footer: { wordmark: 'Sagas', status: 'Early project - not open yet', termsHref: '/terms/' },
+    footer: { wordmark: 'Sagas', status: 'Early project - not open yet' },
   },
 };

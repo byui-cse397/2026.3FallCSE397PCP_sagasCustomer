@@ -87,7 +87,7 @@ describe('landing page copy', () => {
   });
 
   it('tracks design-step approval separately from release approval', () => {
-    expect(['approved', 'draft']).toContain(content.status);
+    expect(content.status).toBe('approved');
     expect(content.designSteps?.De2.status).toBe('approved');
     for (const key of ['De4', 'De5', 'De6'] as const) {
       const step = content.designSteps?.[key];

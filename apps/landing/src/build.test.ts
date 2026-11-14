@@ -1,8 +1,10 @@
 import { existsSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
+
+import { readTermsMarkdown, renderTermsMarkdown } from '@sagas/terms';
 
 import { buildSite } from './build';
 
@@ -29,7 +31,14 @@ describe('buildSite', () => {
     // Tailwind generated the classes the page uses, and the tokens came along.
     expect(css).toContain('.bg-background');
     expect(css).toContain('--foreground:');
+    expect(css).toContain('hsl(var(--muted, 0 0% 96%))');
     expect(css).not.toContain('@tailwind');
-    expect(termsHtml).toContain('Sagas: provisional terms for contributors');
+    const title = /^#\s+(.+)$/m.exec(readTermsMarkdown())?.[1];
+    expect(title).toBeTruthy();
+    expect(termsHtml).toContain(renderTermsMarkdown(`# ${title}`));
+    expect(termsHtml).toContain(renderTermsMarkdown(readTermsMarkdown()));
+
+    const writtenTerms = await readFile(path.join(out, 'terms', 'index.html'), 'utf8');
+    expect(writtenTerms).toBe(termsHtml);
   });
 });

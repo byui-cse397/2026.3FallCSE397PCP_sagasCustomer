@@ -1,5 +1,13 @@
-import { readTermsMarkdown, renderTermsMarkdown } from '@sagas/terms';
 import Link from 'next/link';
+
+import { readTermsMarkdown, renderTermsMarkdown } from '@sagas/terms';
+
+export const dynamic = 'force-static';
+
+export const metadata = {
+  title: 'Contributor terms · Sagas',
+  description: 'The terms for contributing to Sagas.',
+};
 
 export default function TermsPage() {
   const termsHtml = renderTermsMarkdown(readTermsMarkdown());
@@ -12,7 +20,7 @@ export default function TermsPage() {
         </Link>
       </p>
       <article
-        className="prose prose-neutral mt-8 max-w-none"
+        className="terms-prose mt-8 max-w-none"
         dangerouslySetInnerHTML={{ __html: termsHtml }}
       />
     </main>

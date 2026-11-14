@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import '../../../packages/terms/src/terms.css';
 
 @tailwind base;
 @tailwind components;

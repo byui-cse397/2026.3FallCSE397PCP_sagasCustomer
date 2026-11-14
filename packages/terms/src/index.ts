@@ -1,14 +1,24 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const TERMS_PATHS = [
-  resolve(process.cwd(), 'docs/TERMS.md'),
-  resolve(process.cwd(), '../../docs/TERMS.md'),
-];
+function termsPaths(): string[] {
+  const paths = [
+    resolve(process.cwd(), 'docs/TERMS.md'),
+    resolve(process.cwd(), '../../docs/TERMS.md'),
+  ];
+  try {
+    paths.unshift(fileURLToPath(new URL('../../../docs/TERMS.md', import.meta.url)));
+  } catch {
+    // A bundled server may not expose a file URL; use workspace paths instead.
+  }
+  return paths;
+}
 
 /** Reads the one contributor-terms document shared by both applications. */
 export function readTermsMarkdown(): string {
-  for (const file of TERMS_PATHS) {
+  const paths = termsPaths();
+  for (const file of paths) {
     try {
       return readFileSync(file, 'utf8');
     } catch {
@@ -16,7 +26,7 @@ export function readTermsMarkdown(): string {
     }
   }
 
-  throw new Error(`Could not find docs/TERMS.md. Tried: ${TERMS_PATHS.join(', ')}`);
+  throw new Error(`Could not find docs/TERMS.md. Tried: ${paths.join(', ')}`);
 }
 
 function escapeHtml(value: string): string {
@@ -34,7 +44,11 @@ function inlineMarkdown(value: string): string {
   let html = escapeHtml(value);
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, '<a href="$2">$1</a>');
+  html = html.replace(
+    /\[([^\]]+)\]\(([^\s)]+)\)/g,
+    (_match: string, label: string, href: string) =>
+      /^(?:https?:|mailto:|\/(?!\/)|#)/i.test(href) ? `<a href="${href}">${label}</a>` : label,
+  );
   return html;
 }
 

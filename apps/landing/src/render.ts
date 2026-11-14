@@ -25,6 +25,8 @@ const e = escapeHtml;
 const FOCUS =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 const LABEL = 'text-xs font-semibold uppercase tracking-widest text-muted-foreground';
+const TERMS_HREF = '/terms/';
+const TERMS_LABEL = 'Contributor terms';
 
 function link(action: Action, classes: string): string {
   return `<a href="${e(action.href)}" class="${classes} ${FOCUS}">${e(action.label)}</a>`;
@@ -131,7 +133,7 @@ function footer(copy: PageCopy): string {
   return `<footer class="mx-auto max-w-5xl px-4 sm:px-6">
   <div class="flex flex-wrap justify-between gap-3 border-t border-border py-8 text-sm text-muted-foreground">
     <p class="font-semibold text-foreground">${e(copy.footer.wordmark)}</p>
-    <p>${e(copy.footer.status)}${copy.footer.termsHref ? ` · <a href="${e(copy.footer.termsHref)}" class="underline underline-offset-4 ${FOCUS}">${e(FIXED_TEXT.termsLink)}</a>` : ''}</p>
+    <p>${e(copy.footer.status)} · <a href="${TERMS_HREF}" class="underline underline-offset-4 ${FOCUS}">${TERMS_LABEL}</a></p>
   </div>
 </footer>`;
 }
@@ -149,7 +151,7 @@ export function renderTermsPage(termsHtml: string): string {
   <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-10 focus:rounded focus:bg-background focus:px-3 focus:py-2 ${FOCUS}">${e(FIXED_TEXT.skipLink)}</a>
   <main id="main" class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
     <p><a href="/" class="underline underline-offset-4 ${FOCUS}">Sagas</a></p>
-    <article class="prose prose-neutral mt-8 max-w-none">${termsHtml}</article>
+    <article class="terms-prose mt-8 max-w-none">${termsHtml}</article>
   </main>
 </body>
 </html>

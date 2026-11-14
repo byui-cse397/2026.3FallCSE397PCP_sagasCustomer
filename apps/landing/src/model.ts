@@ -27,7 +27,6 @@ export const FIXED_TEXT = {
   skipLink: 'Skip to content',
   /** Read out by screen readers for the navigation landmark. */
   navLabel: 'Main',
-  termsLink: 'Terms',
 } as const;
 
 /** A link to a place on this page, e.g. `#how`, until a real route exists. */
@@ -72,7 +71,7 @@ export interface PageCopy {
     /** "Questions or thoughts? Write to" + the address as a mailto link. */
     contact: { lead: string; email: string };
   };
-  footer: { wordmark: string; status: string; termsHref?: '/terms/' };
+  footer: { wordmark: string; status: string };
 }
 
 /**
