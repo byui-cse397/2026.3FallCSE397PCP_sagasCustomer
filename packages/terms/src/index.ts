@@ -1,32 +1,14 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-function termsPaths(): string[] {
-  const paths = [
-    resolve(process.cwd(), 'docs/TERMS.md'),
-    resolve(process.cwd(), '../../docs/TERMS.md'),
-  ];
-  try {
-    paths.unshift(fileURLToPath(new URL('../../../docs/TERMS.md', import.meta.url)));
-  } catch {
-    // A bundled server may not expose a file URL; use workspace paths instead.
-  }
-  return paths;
-}
-
-/** Reads the one contributor-terms document shared by both applications. */
+/**
+ * Reads the one contributor-terms document shared by both applications. Every
+ * caller runs from a package folder two levels below the repository root, and
+ * one literal path keeps Next.js from tracing the whole project into its
+ * server output.
+ */
 export function readTermsMarkdown(): string {
-  const paths = termsPaths();
-  for (const file of paths) {
-    try {
-      return readFileSync(file, 'utf8');
-    } catch {
-      // Try the next workspace-relative location.
-    }
-  }
-
-  throw new Error(`Could not find docs/TERMS.md. Tried: ${paths.join(', ')}`);
+  return readFileSync(join(process.cwd(), '..', '..', 'docs', 'TERMS.md'), 'utf8');
 }
 
 function escapeHtml(value: string): string {
@@ -47,7 +29,7 @@ function inlineMarkdown(value: string): string {
   html = html.replace(
     /\[([^\]]+)\]\(([^\s)]+)\)/g,
     (_match: string, label: string, href: string) =>
-      /^(?:https?:|mailto:|\/(?!\/)|#)/i.test(href) ? `<a href="${href}">${label}</a>` : label,
+      /^(?:https?:|mailto:|\/(?![/\\])|#)/i.test(href) ? `<a href="${href}">${label}</a>` : label,
   );
   return html;
 }

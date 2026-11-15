@@ -15,6 +15,8 @@ describe('contributor terms renderer', () => {
   });
 
   it('fails the test when the source uses unsupported Markdown constructs', () => {
+    // This intentionally checks the upstream-controlled document so a future
+    // sync cannot silently add syntax this renderer does not support.
     const withoutUrls = markdown
       .replace(/\[[^\]]+\]\(https?:[^)]*\)/g, '')
       .replace(/https?:\/\/\S+/g, '');
@@ -29,5 +31,12 @@ describe('contributor terms renderer', () => {
     const unsafe = renderTermsMarkdown('[x](javascript:alert(1))');
     expect(unsafe).not.toContain('href=');
     expect(unsafe).toContain('x');
+  });
+
+  it('does not turn protocol-relative or backslash-relative targets into links', () => {
+    const rendered = renderTermsMarkdown('[relative](//example.com) [backslash](/\\example.com)');
+    expect(rendered).not.toContain('href=');
+    expect(rendered).toContain('relative');
+    expect(rendered).toContain('backslash');
   });
 });

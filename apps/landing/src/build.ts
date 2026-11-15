@@ -9,15 +9,13 @@ import { renderPage } from './render';
 
 const SRC = import.meta.dirname;
 
-/** Inlines local workspace CSS imports, so the output is one file. */
+/** Inlines the local `@import './x.css'` lines, so the output is one file. */
 async function readCss(file: string): Promise<string> {
   const css = await readFile(file, 'utf8');
-  const imports = [...css.matchAll(/^@import '([^']+\.css)';$/gm)];
+  const imports = [...css.matchAll(/^@import '\.\/([\w.-]+\.css)';$/gm)];
   let out = css;
   for (const [line, name] of imports) {
-    if (name) {
-      out = out.replace(line, await readCss(path.resolve(path.dirname(file), name)));
-    }
+    if (name) out = out.replace(line, await readCss(path.join(SRC, name)));
   }
   return out;
 }
@@ -26,9 +24,7 @@ async function readCss(file: string): Promise<string> {
  * Builds the static site into `outDir`: index.html and styles.css. This is
  * what gets deployed, and what the build test checks.
  */
-export async function buildSite(
-  outDir: string,
-): Promise<{ html: string; css: string }> {
+export async function buildSite(outDir: string): Promise<{ html: string; css: string }> {
   const html = renderPage(content);
   const result = await postcss([tailwindcss(tailwindConfig)]).process(
     await readCss(path.join(SRC, 'styles.css')),
