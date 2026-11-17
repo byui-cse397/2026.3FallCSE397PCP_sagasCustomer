@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["SAGAS_DEV_SANDBOX", "SAGAS_CONNECTION_CHECK"],
+      "passThroughEnv": ["SAGAS_DATABASE_ROUTE", "SAGAS_DIRECT_DATABASE_URL"]
+    }
+  }
+}
