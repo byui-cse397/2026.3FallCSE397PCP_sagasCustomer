@@ -103,11 +103,17 @@ export function matchRun({ requests, invocations, scriptName, versionId, from, t
     byRayId.set(inv.rayId, byRayId.has(inv.rayId) ? null : inv);
   }
   const matches = new Map(); // request → invocation
+  let unversioned = 0;
   for (const request of requests) {
     const inv = request.rayId ? byRayId.get(rayIdOf(request.rayId)) : undefined;
-    if (inv) matches.set(request, inv);
+    if (!inv) continue;
+    matches.set(request, inv);
+    if (inv.version === null) unversioned += 1;
   }
-  return { tied: tied.length, matches };
+  // A record without a version is still matched: its Ray ID is one of this
+  // run's requests, and only one version was live while they were sent. How
+  // many there were goes in the report.
+  return { tied: tied.length, matches, unversioned };
 }
 
 /** Every request has its own record, and there was at least one request. */
@@ -238,6 +244,17 @@ export async function queryWorkersLogs({ fetchImpl, apiBase, account, token, scr
  * @returns {{ source: string | null, match: ReturnType<typeof matchRun> | null, complete: boolean, notes: string[] }}
  */
 export async function collectCpu({ readLogs, readTail, run, polls = 12, wait }) {
+  const result = await collectFrom({ readLogs, readTail, run, polls, wait });
+  const unversioned = result.match?.unversioned ?? 0;
+  if (unversioned > 0) {
+    result.notes.push(
+      `${result.source}: ${unversioned} of the matched records had no script version, so they were matched by Ray ID alone`,
+    );
+  }
+  return result;
+}
+
+async function collectFrom({ readLogs, readTail, run, polls, wait }) {
   const notes = [];
   let best = null;
 
@@ -272,46 +289,92 @@ export async function collectCpu({ readLogs, readTail, run, polls = 12, wait }) 
 }
 
 // ---------------------------------------------------------------------------
+// The direct route's connection string
+
+const SSL_MODES = new Set(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full', 'no-verify']);
+
+/**
+ * The direct route's connection string, with `sslmode=verify-full` whatever
+ * it asked for before, so the Worker checks the certificate and the host
+ * before it sends the password. Every other mode either skips that check or,
+ * in `pg`'s libpq mode (`uselibpqcompat=true`), can.
+ *
+ * - Only the query changes; everything before `?` stays exactly as stored.
+ * - A string with a `#` is refused: everything after it is a fragment, which
+ *   no parser reads, so an added mode could land there unseen. An encoded
+ *   `%23`, in a password say, is fine.
+ * - `ssl=…`, which `pg` also reads, is dropped, so nothing contradicts the mode.
+ * - A string naming certificate files (`sslrootcert`, `sslcert`, `sslkey`) is
+ *   refused: `pg` would try to read them, and a Worker has no files.
+ *
+ * `before` is the mode the string asked for (`null` if none, `another value`
+ * if it isn't a mode). Errors never include any part of the string.
+ *
+ * @param {string | undefined} connectionString
+ * @returns {{ connectionString: string, before: string | null }}
+ */
+export function verifyFull(connectionString) {
+  if (!connectionString) throw new Error('it is empty');
+  if (connectionString.includes('#')) throw new Error('it has a #, which would hide anything after it');
+  let url;
+  try {
+    url = new URL(connectionString);
+  } catch {
+    throw new Error("it isn't a URL");
+  }
+  if (url.protocol !== 'postgres:' && url.protocol !== 'postgresql:') {
+    throw new Error("it isn't a postgres:// or postgresql:// URL");
+  }
+
+  const at = connectionString.indexOf('?');
+  const base = at === -1 ? connectionString : connectionString.slice(0, at);
+  const query = new URLSearchParams(at === -1 ? '' : connectionString.slice(at + 1));
+  for (const name of ['sslrootcert', 'sslcert', 'sslkey']) {
+    if (query.has(name)) throw new Error(`it names a certificate file (${name}), which a Worker can't read`);
+  }
+  const modes = query.getAll('sslmode');
+  const before = modes.length === 0 ? null : modes.every((mode) => SSL_MODES.has(mode)) ? modes.join(', ') : 'another value';
+  query.delete('sslmode');
+  query.delete('ssl');
+  query.append('sslmode', 'verify-full');
+  return { connectionString: `${base}?${query.toString()}`, before };
+}
+
+// ---------------------------------------------------------------------------
 // Response checks
-
-/** Characters React escapes in text, so a fixture string can be found in HTML. */
-function escapeHtml(text) {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#x27;');
-}
-
-function mentions(html, id) {
-  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`(?<![\\w-])${escaped}(?![\\w-])`).test(html);
-}
 
 /**
  * What's wrong with a /dev page for freight-depot at state t{i}, or null.
  *
- * Beyond "Viewing t{i}", the page has to name every record in that state's
- * fixture and none that first appears in a later state, so a page built from
- * the wrong state fails.
+ * Only what the page shows counts. Next.js repeats the page's data in its
+ * script payload, which would match even where nothing rendered; most record
+ * IDs, for one, appear only there. So the checks read the visible text: the
+ * state's label, the site, the state's summary line (its claims, integrity and
+ * contributions), the text of every record it has, and no record text that
+ * only a later state has.
  *
  * @param {string} html
- * @param {number} i  0 to 3
- * @param {{ siteName: string, recordIds: string[][] }} fixtures  recordIds[i] for t{i}
+ * @param {number} i
+ * @param {{ siteName: string, states: { summary: string, recordTexts: string[] }[] }} fixtures
  */
-export function devPageProblem(html, i, { siteName, recordIds }) {
-  const page = html.replaceAll('<!-- -->', ''); // React separates adjacent text this way.
-  if (!page.includes(`Viewing t${i}`)) return `not t${i}`;
-  if (!page.includes(siteName) && !page.includes(escapeHtml(siteName))) return 'not the freight depot';
-  const own = recordIds[i];
-  const missing = own.filter((id) => !mentions(page, id));
+export function devPageProblem(html, i, { siteName, states }) {
+  const text = pageText(html);
+  if (!text.includes(`Viewing t${i}`)) return `not t${i}`;
+  if (!text.includes(siteName)) return 'not the freight depot';
+  const state = states[i];
+  if (!text.includes(state.summary)) return `not t${i}'s summary line`;
+  const missing = state.recordTexts.filter((record) => !text.includes(record));
   if (missing.length) return `${missing.length} of t${i}'s records missing`;
-  const later = new Set(recordIds.slice(i + 1).flat());
-  for (const id of own) later.delete(id);
-  const leaked = [...later].filter((id) => mentions(page, id));
+  const later = new Set(states.slice(i + 1).flatMap((other) => other.recordTexts));
+  for (const record of state.recordTexts) later.delete(record);
+  const leaked = [...later].filter((record) => text.includes(record));
   if (leaked.length) return `${leaked.length} records from a later state`;
   return null;
+}
+
+/** Whitespace collapsed, as pageText leaves it. */
+export function collapseSpace(text) {
+  return text.replace(/\s+/g, ' ').trim();
 }
 
 /**

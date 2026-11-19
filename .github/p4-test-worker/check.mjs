@@ -31,6 +31,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
+  collapseSpace,
   collectCpu,
   connectionStatus,
   decide,
@@ -58,9 +59,14 @@ const statesIndex = readJson('packages/fixtures/states/index.json');
 const siteSlugs = statesIndex.sites.map((site) => site.slug).sort();
 const freightDepot = statesIndex.sites.find((site) => site.slug === 'freight-depot');
 const freightDepotStates = [0, 1, 2, 3].map((i) => readJson(`packages/fixtures/states/freight-depot.t${i}.json`));
+// What /dev shows for each state, in the words the sandbox renders
+// (apps/web/src/app/dev/sandbox.tsx): its summary line and its records' text.
 const devFixtures = {
   siteName: freightDepot.name,
-  recordIds: freightDepotStates.map((state) => state.records.map((record) => record.id)),
+  states: freightDepotStates.map((state) => ({
+    summary: `${state.claims.length} claim(s) · integrity ${state.integrity.overall}/100 · ${state.eventIdsApplied.length} contributions applied`,
+    recordTexts: state.records.map((record) => collapseSpace(record.text ?? '')).filter((text) => text !== ''),
+  })),
 };
 // The seed stores the contract's GraphState, which has no `stateId` or `label`:
 // those stay on the fixtures-only FixtureState (contract 2.7.0).

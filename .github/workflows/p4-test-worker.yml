@@ -125,9 +125,9 @@ jobs:
             }
           '
 
-      # The sponsor creates the Hyperdrive configuration (#11) and its ID goes
-      # in the Wrangler file. Until then the app would have no route to the
-      # database, so the run stops here, before anything is deployed.
+      # The Hyperdrive configuration lives in the sponsor's account (#11), and
+      # its ID goes in the Wrangler file. Until then the app would have no route
+      # to the database, so the run stops here, before anything is deployed.
       - name: Is the Hyperdrive ID in the configuration?
         id: hyperdrive
         working-directory: apps/web
@@ -138,7 +138,7 @@ jobs:
             const config = unstable_readConfig({ config: process.env.CONFIG });
             const id = (config.hyperdrive ?? []).find((h) => h.binding === "HYPERDRIVE")?.id ?? "";
             if (!/^[0-9a-f]{32}$/.test(id)) {
-              console.error(`::error::apps/web/${process.env.CONFIG} has no Hyperdrive ID yet ("${id}"). Put in the ID the sponsor posts in #11, through a pull request.`);
+              console.error(`::error::apps/web/${process.env.CONFIG} has no Hyperdrive ID yet ("${id}"). Put in the ID of the Hyperdrive configuration (#11), through a pull request.`);
               process.exit(1);
             }
             console.log(`Hyperdrive configuration ${id}`);
@@ -220,23 +220,40 @@ jobs:
             "Hyperdrive, it needs Hyperdrive Read). Either way, ask the sponsor in #11."
 
       # The direct route's string, for the connection check only: the app uses
-      # Hyperdrive. TLS is required: when the string doesn't say,
-      # `sslmode=verify-full` is added, so the Worker never sends the password
-      # unencrypted. The string goes to Wrangler on standard input and is never
-      # written to a file or the log.
+      # Hyperdrive. The Worker gets it with `sslmode=verify-full`, whatever mode
+      # the string asked for, so it checks the certificate and the host before
+      # sending the password; a string naming certificate files is refused
+      # (verifyFull in .github/p4-test-worker/lib.mjs, with its tests). The
+      # check runs first, so a refused string never reaches Wrangler. The
+      # string goes to Wrangler on standard input and is never written to a
+      # file or the log.
       - name: Install DATABASE_URL as a Worker secret
         working-directory: apps/web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
         run: |
-          node -e '
-            const s = process.env.SUPABASE_DATABASE_URL;
-            // Appended as text, so the rest of the string reaches the Worker
-            // exactly as stored.
-            const add = new URL(s).searchParams.has("sslmode") ? "" : (s.includes("?") ? "&" : "?") + "sslmode=verify-full";
-            process.stdout.write(s + add);
-          ' | pnpm exec wrangler secret put DATABASE_URL --config "$CONFIG"
+          set -euo pipefail
+          # shellcheck disable=SC2016 # the single quotes hold JavaScript
+          script='
+            const { verifyFull } = await import(`${process.env.GITHUB_WORKSPACE}/.github/p4-test-worker/lib.mjs`);
+            let result;
+            try {
+              result = verifyFull(process.env.SUPABASE_DATABASE_URL);
+            } catch (error) {
+              console.error(`::error::SUPABASE_DATABASE_URL can not be used: ${error.message}.`);
+              process.exit(1);
+            }
+            if (process.argv[1] === "--check") {
+              if (result.before !== "verify-full") {
+                console.error(`::notice::SUPABASE_DATABASE_URL asked for sslmode ${result.before ?? "(none)"}; the Worker gets verify-full.`);
+              }
+            } else {
+              process.stdout.write(result.connectionString);
+            }
+          '
+          node --input-type=module -e "$script" -- --check
+          node --input-type=module -e "$script" | pnpm exec wrangler secret put DATABASE_URL --config "$CONFIG"
 
       - name: What was deployed
         id: deployed

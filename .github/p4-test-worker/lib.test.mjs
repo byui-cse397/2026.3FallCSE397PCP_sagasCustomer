@@ -3,6 +3,7 @@
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { describe, it } from 'node:test';
 import {
   collectCpu,
@@ -20,6 +21,7 @@ import {
   splitJsonObjects,
   summariseRoute,
   termsPageProblem,
+  verifyFull,
 } from './lib.mjs';
 
 const T0 = 1_800_000_000_000;
@@ -66,6 +68,35 @@ function run(reqs) {
 }
 
 describe('matchRun', () => {
+  /** A Workers Logs event with no `$workers.scriptVersion`. */
+  const withoutVersion = (event) => {
+    const { scriptVersion: _scriptVersion, ...workers } = event.$workers;
+    return { ...event, $workers: workers };
+  };
+
+  it('matches records without a script version by Ray ID, and counts them', () => {
+    const reqs = requests(10);
+    const events = eventsFor(reqs).map((event, i) => (i % 2 === 0 ? withoutVersion(event) : event));
+    const invocations = events.map(fromWorkersLog);
+    assert.equal(invocations[0].version, null);
+    const match = matchRun({ ...run(reqs), invocations });
+    assert.equal(isComplete(match, reqs), true);
+    assert.equal(match.unversioned, 5);
+  });
+
+  it('still refuses another version, and a record with neither a version nor a Ray ID', () => {
+    const reqs = requests(4);
+    const other = eventsFor(reqs, { version: 'v-old' }).map(fromWorkersLog);
+    assert.equal(matchRun({ ...run(reqs), invocations: other }).matches.size, 0);
+    const anonymous = eventsFor(reqs)
+      .map(withoutVersion)
+      .map((event) => ({ ...event, $metadata: { ...event.$metadata, rayId: undefined } }))
+      .map(fromWorkersLog);
+    const match = matchRun({ ...run(reqs), invocations: anonymous });
+    assert.equal(match.matches.size, 0);
+    assert.equal(isComplete(match, reqs), false);
+  });
+
   it('matches every request to its own record by Ray ID', () => {
     const reqs = requests(100);
     const match = matchRun({ ...run(reqs), invocations: eventsFor(reqs).map(fromWorkersLog) });
@@ -269,6 +300,21 @@ describe('collectCpu', () => {
     assert.equal(polls, 3);
   });
 
+  it('says in the report how many matched records had no script version', async () => {
+    const reqs = requests(4);
+    const invocations = eventsFor(reqs)
+      .map((event, i) => (i === 0 ? { ...event, $workers: { ...event.$workers, scriptVersion: undefined } } : event))
+      .map(fromWorkersLog);
+    const result = await collectCpu({
+      run: run(reqs),
+      readLogs: async () => ({ invocations }),
+      readTail: () => ({ problem: 'not used' }),
+      wait: noWait,
+    });
+    assert.equal(result.complete, true);
+    assert.deepEqual(result.notes, ['Workers Logs: 1 of the matched records had no script version, so they were matched by Ray ID alone']);
+  });
+
   it('falls back to tail when the logs stay partial', async () => {
     const reqs = requests(10);
     const tailEvents = reqs.map((r) => ({
@@ -345,29 +391,121 @@ describe('queryWorkersLogs', () => {
 });
 
 describe('devPageProblem', () => {
+  // t0 and t1 share their records' text; their summary lines tell them apart.
   const fixtures = {
     siteName: 'The Freight Depot',
-    recordIds: [['rec-fd-01', 'rec-fd-02'], ['rec-fd-01', 'rec-fd-02', 'rec-fd-03'], ['rec-fd-01', 'rec-fd-02', 'rec-fd-03'], ['rec-fd-01', 'rec-fd-02', 'rec-fd-03', 'rec-fd-10']],
+    states: [
+      { summary: '3 claim(s) · integrity 19/100 · 7 contributions applied', recordTexts: ['The office at the front.', 'What was on the lot before.'] },
+      { summary: '6 claim(s) · integrity 44/100 · 16 contributions applied', recordTexts: ['The office at the front.', 'What was on the lot before.'] },
+      { summary: '7 claim(s) · integrity 57/100 · 22 contributions applied', recordTexts: ['The office at the front.', 'What was on the lot before.', 'The dock burned in 1962.'] },
+      { summary: '10 claim(s) · integrity 81/100 · 36 contributions applied', recordTexts: ['The office at the front.', 'What was on the lot before.', 'The dock burned in 1962.', "Ana's photo of the sign."] },
+    ],
   };
-  const page = (state, ids) =>
-    `<h1>The Freight Depot</h1><span>Viewing <!-- -->t${state}</span><script>self.__next_f.push([1,"${ids.map((id) => `\\"${id}\\"`).join(',')}"])</script>`;
+  const escape = (text) => text.replaceAll('&', '&amp;').replaceAll("'", '&#x27;');
+  /** A page as React renders it: visible state, then the same data again in the script payload. */
+  const page = (label, state, payload = state) =>
+    `<h1>The Freight Depot</h1><span>Viewing <!-- -->t${label}</span>` +
+    `<p>${escape(fixtures.states[state].summary).replace(' · ', ' ·<!-- --> ')}</p>` +
+    fixtures.states[state].recordTexts.map((text) => `<p>${escape(text)}</p>`).join('') +
+    `<script>self.__next_f.push([1,${JSON.stringify(JSON.stringify(fixtures.states[payload]))}])</script>`;
 
-  it('passes the right state', () => {
-    assert.equal(devPageProblem(page(1, fixtures.recordIds[1]), 1, fixtures), null);
+  it('passes the right state, apostrophes and React separators included', () => {
+    for (const i of [0, 1, 2, 3]) assert.equal(devPageProblem(page(i, i), i, fixtures), null);
   });
 
-  it('fails a page built from a later state', () => {
-    assert.match(devPageProblem(page(0, fixtures.recordIds[3]), 0, fixtures), /later state/);
+  it('fails a page that shows another state under the right label', () => {
+    assert.match(devPageProblem(page(0, 1), 0, fixtures), /summary line/);
+    assert.match(devPageProblem(page(3, 2), 3, fixtures), /summary line/);
   });
 
-  it('fails a page built from an earlier state', () => {
-    assert.match(devPageProblem(page(3, fixtures.recordIds[0]), 3, fixtures), /missing/);
+  it('fails content that is only in the script payload', () => {
+    const payloadOnly = `<h1>The Freight Depot</h1><span>Viewing t2</span><p>${fixtures.states[2].summary}</p>` +
+      `<script>self.__next_f.push([1,${JSON.stringify(fixtures.states[2].recordTexts.join(' '))}])</script>`;
+    assert.match(devPageProblem(payloadOnly, 2, fixtures), /1 of t2's records missing|3 of t2's records missing/);
+    const labelOnlyInScript = page(2, 2).replace('<span>Viewing <!-- -->t2</span>', '<script>"Viewing t2"</script>');
+    assert.match(devPageProblem(labelOnlyInScript, 2, fixtures), /not t2/);
   });
 
-  it('does not take rec-fd-1 for rec-fd-10', () => {
-    const ids = { siteName: 'The Freight Depot', recordIds: [['rec-fd-1'], ['rec-fd-1', 'rec-fd-10']] };
-    assert.equal(devPageProblem(page(0, ['rec-fd-1']), 0, ids), null);
-    assert.match(devPageProblem(page(0, ['rec-fd-10']), 0, ids), /missing/);
+  it('fails records missing from the page, or from a later state', () => {
+    const missing = page(3, 3).replace(`<p>${escape("Ana's photo of the sign.")}</p>`, '');
+    assert.match(devPageProblem(missing, 3, fixtures), /1 of t3's records missing/);
+    const leaked = page(2, 2).replace('</h1>', `</h1><p>${escape("Ana's photo of the sign.")}</p>`);
+    assert.match(devPageProblem(leaked, 2, fixtures), /1 records from a later state/);
+  });
+});
+
+describe('verifyFull', () => {
+  const BASE_URL = 'postgresql://postgres.ref:p%40ss%3Bw0rd@aws-0-us-west-2.pooler.supabase.com:6543/postgres';
+
+  it('adds verify-full to a string without a mode, leaving the rest exactly as stored', () => {
+    const { connectionString, before } = verifyFull(BASE_URL);
+    assert.equal(connectionString, `${BASE_URL}?sslmode=verify-full`);
+    assert.equal(before, null);
+  });
+
+  it('replaces every other mode, keeping the other parameters', () => {
+    for (const mode of ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'no-verify']) {
+      const { connectionString, before } = verifyFull(`${BASE_URL}?application_name=sagas&sslmode=${mode}&connect_timeout=10`);
+      assert.equal(connectionString, `${BASE_URL}?application_name=sagas&connect_timeout=10&sslmode=verify-full`);
+      assert.equal(before, mode);
+    }
+  });
+
+  it('leaves one sslmode, drops ssl=, and keeps libpq mode, where verify-full still checks everything', () => {
+    const { connectionString, before } = verifyFull(`${BASE_URL}?sslmode=require&ssl=0&uselibpqcompat=true&sslmode=disable`);
+    const query = new URL(connectionString).searchParams;
+    assert.deepEqual(query.getAll('sslmode'), ['verify-full']);
+    assert.equal(query.has('ssl'), false);
+    assert.equal(query.get('uselibpqcompat'), 'true');
+    assert.equal(before, 'require, disable');
+    assert.equal(verifyFull(`${BASE_URL}?sslmode=whatever`).before, 'another value');
+  });
+
+  it('refuses certificate files and strings that are not Postgres URLs, without echoing them', () => {
+    const secret = 'p%40ss%3Bw0rd';
+    for (const bad of [`${BASE_URL}?sslrootcert=/etc/ca.crt`, `${BASE_URL}?sslkey=k.pem`, `mysql://u:${secret}@h/db`, `u:${secret}@h/db`, '', `${BASE_URL}#frag`]) {
+      assert.throws(
+        () => verifyFull(bad),
+        (error) => error instanceof Error && !error.message.includes(secret) && !error.message.includes('pooler'),
+      );
+    }
+    assert.throws(() => verifyFull(undefined), /empty/);
+  });
+
+  it('refuses a # anywhere, even a bare one at the end, and keeps an encoded %23', () => {
+    // A bare trailing # has an empty fragment, so `new URL(...).hash` is ''.
+    for (const bad of [`${BASE_URL}#`, `${BASE_URL}?sslmode=disable#`, `${BASE_URL}#?sslmode=disable`, 'postgresql://u:p#w@h/db']) {
+      assert.throws(() => verifyFull(bad), /#/);
+    }
+    const encoded = 'postgresql://u:p%23w@h.example.com:6543/postgres';
+    assert.equal(verifyFull(encoded).connectionString, `${encoded}?sslmode=verify-full`);
+  });
+
+  it('gives pg itself a string that checks the certificate and the host, however the input was written', () => {
+    // The pinned pg's own parser, from apps/web's dependencies.
+    const fromWeb = createRequire(new URL('../../apps/web/package.json', import.meta.url));
+    const { parse } = createRequire(fromWeb.resolve('pg'))('pg-connection-string');
+    const inputs = [
+      BASE_URL,
+      `${BASE_URL}?`,
+      `${BASE_URL}?sslmode=disable`,
+      `${BASE_URL}?ssl=0`,
+      `${BASE_URL}?ssl=false&sslmode=no-verify`,
+      `${BASE_URL}?sslmode=require&uselibpqcompat=true`,
+      `${BASE_URL}?sslmode=prefer&uselibpqcompat=true&application_name=sagas`,
+      `${BASE_URL}?ss%6Cmode=disable`,
+      `${BASE_URL}?a=1?sslmode=disable`,
+      `${BASE_URL}?sslmode=disable&&sslmode=allow`,
+      'postgresql://u:p%zz w@h.example.com:5432/postgres?sslmode=disable',
+      'postgres://u:%2F%3F%40@h.example.com/db?sslmode=verify-ca',
+    ];
+    for (const input of inputs) {
+      const config = parse(verifyFull(input).connectionString);
+      assert.equal(config.sslmode, 'verify-full', input);
+      assert.equal(typeof config.ssl, 'object', input);
+      assert.notEqual(config.ssl.rejectUnauthorized, false, input);
+      assert.equal(config.ssl.checkServerIdentity, undefined, input);
+    }
   });
 });
 
