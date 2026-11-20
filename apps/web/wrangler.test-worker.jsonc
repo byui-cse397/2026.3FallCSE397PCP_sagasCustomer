@@ -31,13 +31,14 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS",
   },
-  // The sponsor's Hyperdrive configuration for sagas-project (#11), with
-  // Supabase's CA certificate and Verify full. Its ID isn't a secret. The
-  // workflow won't deploy until the placeholder is replaced.
+  // The Hyperdrive configuration sagas-supabase, in the sponsor's account
+  // (#11): Supabase's Direct connection host, SSL mode require (the
+  // certificate is checked against public roots), caching off. Its ID isn't
+  // a secret.
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "REPLACE-WITH-THE-ID-FROM-ISSUE-11",
+      "id": "28a8d4b069ec4421aaede67c2e835519",
     },
   ],
   "workers_dev": true,

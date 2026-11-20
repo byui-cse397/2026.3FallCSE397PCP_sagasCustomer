@@ -527,7 +527,7 @@ export function renderReport(r) {
       ['closed-while-connecting', 'tls-certificate'].includes(kind) &&
       !(r.certificate ?? '').includes(': 0 (ok)');
     const reason = untrusted
-      ? " The database's certificate doesn't chain to a public root, and a Worker's connection only accepts ones that do. Hyperdrive, given Supabase's CA certificate, is the route for that."
+      ? " The database's certificate doesn't chain to a public root, and a Worker's connection only accepts ones that do. Hyperdrive makes its own connections and checks the certificate itself, so it's the route for that."
       : kind === 'tls' && name === 'direct'
         ? ' The database refused the connection over TLS settings; check the `sslmode` above.'
         : '';
@@ -599,7 +599,7 @@ _Routes not requested: they need a working connection and the fixtures in the ho
 **Tested:** ${r.tested ?? '(not given)'}
 **Connection routes:** ${
     viaHyperdrive
-      ? `the app uses Hyperdrive, whose configuration sets its TLS to Supabase. Direct, checked beside it: Supabase's transaction pooler, with TLS (\`sslmode=${last?.direct?.tls ?? 'unknown'}\`).`
+      ? `the app uses Hyperdrive, with the host and TLS mode its configuration sets (#11). Direct, checked beside it: Supabase's transaction pooler, with TLS (\`sslmode=${last?.direct?.tls ?? 'unknown'}\`).`
       : `direct, through Supabase's transaction pooler, with TLS (\`sslmode=${last?.tls ?? 'unknown'}\`). Hyperdrive: not set up.`
   }
 **Database certificate:** ${r.certificate ?? '(not checked)'}
