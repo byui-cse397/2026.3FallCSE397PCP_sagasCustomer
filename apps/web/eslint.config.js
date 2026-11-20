@@ -3,7 +3,7 @@ import nextjsConfig from '@sagas/eslint-config/nextjs';
 import reactConfig from '@sagas/eslint-config/react';
 
 export default [
-  { ignores: ['.next/**'] },
+  { ignores: ['.next/**', '.open-next/**', '.wrangler/**'] },
   ...baseConfig,
   ...reactConfig,
   ...nextjsConfig,

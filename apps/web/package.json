@@ -3,6 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "imports": {
+    "#open-next/worker": {
+      "types": "./src/cloudflare/open-next-worker.d.ts",
+      "default": "./.open-next/worker.js"
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -20,7 +26,9 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "@sagas/read-model": "workspace:*",
-    "@sagas/terms": "workspace:*"
+    "@sagas/terms": "workspace:*",
+    "pg": "^8.23.1",
+    "pg-cloudflare": "^1.4.1"
   },
   "devDependencies": {
     "@sagas/eslint-config": "workspace:*",
@@ -35,7 +43,10 @@
     "autoprefixer": "^10.4.20",
     "happy-dom": "^21.0.4",
     "postcss": "^8.5.1",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@opennextjs/cloudflare": "^1.20.17",
+    "@types/pg": "^8.23.1",
+    "wrangler": "^4.151.1"
   },
   "prettier": "@sagas/prettier-config"
 }

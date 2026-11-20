@@ -154,9 +154,11 @@ own branch and pull request by one person. Do not run `git pull upstream`,
   hosted connection string, the deployment source is the GitHub repository
   secret `SUPABASE_DATABASE_URL`; deployment installs it as the Worker secret
   `DATABASE_URL`. The separate name requires an explicit mapping. CI jobs using
-  throwaway databases must not map the hosted secret. The workflows that deploy
-  the app (the P4 test Worker, then P7) will do the mapping. No such workflow
-  exists yet.
+  throwaway databases must not map the hosted secret. The P4 test Worker's
+  workflow (`.github/workflows/p4-test-worker.yml`) does the mapping. With a
+  Hyperdrive binding, the Worker's entry (`apps/web/src/cloudflare/worker.ts`)
+  gives the app Hyperdrive's string as `DATABASE_URL` instead, and the secret
+  is used only to check the direct route.
 - The hosted connection string contains the database password. Never ask for
   it, print it, or write it into a file, a commit, an issue or a pull request.
 

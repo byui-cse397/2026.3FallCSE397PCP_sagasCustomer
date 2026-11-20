@@ -1,0 +1,392 @@
+# The P4 test Worker (#34). TEMPORARY. Once the results are on #34 and the
+# Worker is deleted, one pull request removes:
+#   - this file and .github/p4-test-worker/
+#   - apps/web/wrangler.test-worker.jsonc
+#   - the /api/test-worker route (apps/web/src/app/api/test-worker/)
+#   - from apps/web/turbo.json, SAGAS_CONNECTION_CHECK and the two
+#     passThroughEnv names, which only that route reads (SAGAS_DEV_SANDBOX stays)
+#   - the sentence in AGENTS.md that names this workflow
+# P7 keeps apps/web/src/cloudflare/ and the #open-next/worker entry in
+# apps/web/package.json: its Worker reaches the database through Hyperdrive the
+# same way. The sponsor's Hyperdrive configuration isn't deleted with the Worker.
+#
+# WHAT IT CHECKS
+# Section 2 of apps/web/docs/proposals/P4-full-app-hosting-proposal.md: that a
+# Worker reaches the hosted database (a query with $1 parameters), and the CPU
+# time of each route the preview serves, on Cloudflare itself. The report comes
+# out in the proposal's format, with the decision rule applied.
+#
+# THE SPONSOR'S CONDITIONS (#11, 2 Nov 2026)
+# Fixture data only, no route, Workers Free, removed afterwards. The Worker,
+# sagas-app-test, answers only on its workers.dev address; its configuration has
+# no routes, so the Workers-only token is enough.
+#
+# HOW TO RUN IT (Actions → "P4 test Worker" → Run workflow, on main)
+#   test    builds main with OpenNext, deploys sagas-app-test, installs the
+#           database secret, runs the checks and writes the report to the run's
+#           summary and its artifact.
+#   delete  deletes sagas-app-test. Run it once the results are on #34.
+#
+# Manual only, and only from main: the test is of the version P7 will deploy.
+#
+# THE DATABASE ROUTES
+# The app reaches the hosted database through the sponsor's Hyperdrive
+# configuration (#11), whose ID is in the Wrangler file; the run stops early
+# until it is. The Worker's entry hands Hyperdrive's string to the app as
+# DATABASE_URL (apps/web/src/cloudflare/). The direct route, from the Worker to
+# Supabase's transaction pooler, is checked beside it, as the proposal asks.
+#
+# SECRETS
+# CLOUDFLARE_API_TOKEN deploys and deletes, as for the landing page.
+# SUPABASE_DATABASE_URL is the hosted connection string. It is mapped in two
+# steps: one reads only its host and port, for the certificate check; the other
+# installs it as the Worker secret DATABASE_URL, which only the connection
+# check's direct route uses. The build uses the CI database below, never the
+# hosted one. Neither value is ever printed.
+
+name: P4 test Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "test: build, deploy and check. delete: remove the Worker."
+        type: choice
+        options: [test, delete]
+        default: test
+      requests:
+        description: "Requests per route"
+        type: number
+        default: 100
+
+permissions:
+  contents: read
+
+# One run at a time; a second waits rather than replacing a deploy mid-check.
+concurrency:
+  group: p4-test-worker
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  WRANGLER_SEND_METRICS: false
+  CONFIG: wrangler.test-worker.jsonc
+  WORKER_NAME: sagas-app-test
+  # The sponsor's account, as in apps/landing/wrangler.jsonc. Not a secret.
+  CLOUDFLARE_ACCOUNT_ID: 5e302dc6f0aa3537025b0e20b28ca23f
+  # The CI database, which exists only for this job.
+  CI_DATABASE_URL: postgresql://sagas:sagas@127.0.0.1:5435/sagas_read
+
+jobs:
+  test:
+    if: >-
+      inputs.action == 'test' &&
+      github.repository == 'byui-cse397/2026.3FallCSE397PCP_sagasCustomer' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # `next build` renders the home page from Postgres, so the build gets its
+    # own database, seeded with the fixtures. It ends with the job; at runtime
+    # the Worker uses the hosted database.
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: sagas
+          POSTGRES_PASSWORD: sagas
+          POSTGRES_DB: sagas_read
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd "pg_isready -U sagas -d sagas_read"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Same Node, pnpm and install steps that ci.yml uses.
+      - uses: ./tooling/github/setup
+
+      # The checker's own tests, and its input, before anything is deployed.
+      - name: Test the checker
+        env:
+          REQUESTS: ${{ inputs.requests }}
+        run: |
+          node --test .github/p4-test-worker/lib.test.mjs
+          # shellcheck disable=SC2016 # the single quotes hold JavaScript
+          node -e '
+            const n = Number(process.env.REQUESTS);
+            if (!Number.isInteger(n) || n < 2 || n > 1000) {
+              console.error(`Requests per route must be a whole number from 2 to 1000, not "${process.env.REQUESTS}".`);
+              process.exit(1);
+            }
+          '
+
+      # The Hyperdrive configuration lives in the sponsor's account (#11), and
+      # its ID goes in the Wrangler file. Until then the app would have no route
+      # to the database, so the run stops here, before anything is deployed.
+      - name: Is the Hyperdrive ID in the configuration?
+        id: hyperdrive
+        working-directory: apps/web
+        run: |
+          # shellcheck disable=SC2016 # the single quotes hold JavaScript
+          node --input-type=module -e '
+            const { unstable_readConfig } = await import("wrangler");
+            const config = unstable_readConfig({ config: process.env.CONFIG });
+            const id = (config.hyperdrive ?? []).find((h) => h.binding === "HYPERDRIVE")?.id ?? "";
+            if (!/^[0-9a-f]{32}$/.test(id)) {
+              console.error(`::error::apps/web/${process.env.CONFIG} has no Hyperdrive ID yet ("${id}"). Put in the ID of the Hyperdrive configuration (#11), through a pull request.`);
+              process.exit(1);
+            }
+            console.log(`Hyperdrive configuration ${id}`);
+            (await import("node:fs")).appendFileSync(process.env.GITHUB_OUTPUT, `id=${id}\n`);
+          '
+
+      # Workers check the database's certificate against public roots, and a
+      # pg connection from a Worker can't be told to skip that check. This reads
+      # the chain the database presents and checks it against the runner's
+      # public roots, the nearest stand-in for Cloudflare's. It needs no
+      # password, and prints only the verification result and the top issuer.
+      - name: Which certificate does the database present?
+        id: certificate
+        env:
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "::error::The repository secret SUPABASE_DATABASE_URL is empty or missing."
+            exit 1
+          fi
+          # shellcheck disable=SC2016 # the single quotes hold JavaScript
+          read -r host port < <(node -e '
+            const u = new URL(process.env.SUPABASE_DATABASE_URL);
+            process.stdout.write(`${u.hostname} ${u.port || 5432}\n`);
+          ')
+          out=$(timeout 30 openssl s_client -starttls postgres -connect "$host:$port" \
+            -servername "$host" -showcerts </dev/null 2>&1 || true)
+          code=$(grep -m1 'Verify return code' <<<"$out" | sed 's/.*Verify return code: //')
+          issuer=$(grep -E '^ +i:' <<<"$out" | tail -1 | grep -o 'CN *= *[^,/]*' || true)
+          summary="checked from the runner against public roots: ${code:-no answer}; top issuer ${issuer:-unknown}"
+          echo "$summary"
+          echo "summary=$summary" >> "$GITHUB_OUTPUT"
+
+      - name: Seed the CI database with the fixtures
+        env:
+          DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+        run: pnpm --filter @sagas/ui-api db:seed
+
+      - name: Build for Cloudflare (OpenNext)
+        working-directory: apps/web
+        env:
+          DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+        run: pnpm exec opennextjs-cloudflare build --config "$CONFIG"
+
+      # Informational. If it doesn't exist yet, the deploy creates it, which a
+      # token without permission to create Workers can't do.
+      - name: Does sagas-app-test exist yet?
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          status=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings")
+          case "$status" in
+            200) echo "sagas-app-test exists; the deploy updates it." ;;
+            404) echo "sagas-app-test doesn't exist yet; the deploy creates it." ;;
+            *) echo "::warning::Couldn't tell whether sagas-app-test exists (HTTP $status)." ;;
+          esac
+
+      # Before deploying, OpenNext reads the configuration's variables through
+      # Wrangler's local emulation, which refuses a Hyperdrive binding without a
+      # local database to stand in for it. The CI database is that stand-in
+      # here; it is never deployed. The Worker uses the sponsor's configuration.
+      - name: Deploy sagas-app-test
+        id: deploy
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: ${{ env.CI_DATABASE_URL }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-deploy.ndjson
+        run: pnpm exec opennextjs-cloudflare deploy --config "$CONFIG"
+
+      - name: If the deploy was refused
+        if: failure() && steps.deploy.outcome == 'failure'
+        run: |
+          echo "::error::The deploy failed. If the error above is an authentication error"\
+            "(code 10000), either the token can't create Workers (if sagas-app-test didn't"\
+            "exist) or it can't bind the Hyperdrive configuration (if the error names"\
+            "Hyperdrive, it needs Hyperdrive Read). Either way, ask the sponsor in #11."
+
+      # The direct route's string, for the connection check only: the app uses
+      # Hyperdrive. The Worker gets it with `sslmode=verify-full`, whatever mode
+      # the string asked for, so it checks the certificate and the host before
+      # sending the password; a string naming certificate files is refused
+      # (verifyFull in .github/p4-test-worker/lib.mjs, with its tests). The
+      # check runs first, so a refused string never reaches Wrangler. The
+      # string goes to Wrangler on standard input and is never written to a
+      # file or the log.
+      - name: Install DATABASE_URL as a Worker secret
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2016 # the single quotes hold JavaScript
+          script='
+            const { verifyFull } = await import(`${process.env.GITHUB_WORKSPACE}/.github/p4-test-worker/lib.mjs`);
+            let result;
+            try {
+              result = verifyFull(process.env.SUPABASE_DATABASE_URL);
+            } catch (error) {
+              console.error(`::error::SUPABASE_DATABASE_URL can not be used: ${error.message}.`);
+              process.exit(1);
+            }
+            if (process.argv[1] === "--check") {
+              if (result.before !== "verify-full") {
+                console.error(`::notice::SUPABASE_DATABASE_URL asked for sslmode ${result.before ?? "(none)"}; the Worker gets verify-full.`);
+              }
+            } else {
+              process.stdout.write(result.connectionString);
+            }
+          '
+          node --input-type=module -e "$script" -- --check
+          node --input-type=module -e "$script" | pnpm exec wrangler secret put DATABASE_URL --config "$CONFIG"
+
+      - name: What was deployed
+        id: deployed
+        env:
+          HYPERDRIVE_ID: ${{ steps.hyperdrive.outputs.id }}
+        run: |
+          # shellcheck disable=SC2016 # the single quotes hold JavaScript
+          node -e '
+            const fs = require("node:fs");
+            const lines = fs.readFileSync(process.argv[1], "utf8").trim().split("\n").map(JSON.parse);
+            const deploy = lines.filter((l) => l.type === "deploy").at(-1);
+            const url = (deploy.targets ?? []).find((t) => t.endsWith(".workers.dev"));
+            const v = (p) => JSON.parse(fs.readFileSync(`apps/web/node_modules/${p}/package.json`, "utf8")).version;
+            const kib = (b) => Math.round(b / 1024).toLocaleString("en-US");
+            const size = deploy.bundle_size
+              ? `${kib(deploy.bundle_size.raw_bytes)} KiB (${kib(deploy.bundle_size.gzip_bytes)} KiB gzip)`
+              : "size not reported";
+            const tested = [
+              `commit \`${process.env.GITHUB_SHA.slice(0, 7)}\` on main`,
+              `\`apps/web/${process.env.CONFIG}\` (Workers Free, no route, workers.dev only)`,
+              `Hyperdrive configuration \`${process.env.HYPERDRIVE_ID}\``,
+              `Next.js ${v("next")}, @opennextjs/cloudflare ${v("@opennextjs/cloudflare")}, Wrangler ${v("wrangler")}`,
+              `bundle ${size}`,
+            ].join("; ");
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${url}\ntested=${tested}\n`);
+            console.log(url); console.log(tested);
+          ' "$RUNNER_TEMP/wrangler-deploy.ndjson"
+
+      # `wrangler secret put` creates a version and deploys it, so the version
+      # the checks run against is this one, not the deploy's. The check counts
+      # only CPU records from it.
+      - name: Which version is live
+        id: live
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          pnpm exec wrangler deployments status --config "$CONFIG" --json > "$RUNNER_TEMP/deployment.json"
+          version=$(node -e '
+            const d = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+            const live = (d.versions ?? []).filter((v) => v.percentage === 100);
+            if (live.length !== 1) { console.error("Expected one version at 100%"); process.exit(1); }
+            process.stdout.write(live[0].version_id);
+          ' "$RUNNER_TEMP/deployment.json")
+          echo "Live version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # The second way to read CPU time. Starting a tail accepts the same
+      # permissions as deploying (Workers Scripts Write or Workers Editor), so
+      # the token can tail; whether tail events carry CPU time is what this
+      # finds out.
+      - name: Start wrangler tail
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          nohup pnpm exec wrangler tail --config "$CONFIG" --format json \
+            > "$RUNNER_TEMP/tail.json" 2> "$RUNNER_TEMP/tail.err" &
+          echo $! > "$RUNNER_TEMP/tail.pid"
+          sleep 15
+          if kill -0 "$(cat "$RUNNER_TEMP/tail.pid")" 2>/dev/null; then
+            echo "wrangler tail is running."
+          else
+            echo "::warning::wrangler tail stopped."
+            grep -m3 -i 'error\|code' "$RUNNER_TEMP/tail.err" || true
+          fi
+
+      - name: Run the checks
+        env:
+          BASE_URL: ${{ steps.deployed.outputs.url }}
+          VERSION_ID: ${{ steps.live.outputs.version }}
+          REQUESTS: ${{ inputs.requests }}
+          OUT_DIR: ${{ runner.temp }}/p4-report
+          TAIL_FILE: ${{ runner.temp }}/tail.json
+          TESTED: ${{ steps.deployed.outputs.tested }}; live version ${{ steps.live.outputs.version }}
+          CERTIFICATE: ${{ steps.certificate.outputs.summary }}
+          # Reads Workers Logs, which takes Workers Observability Write: the only
+          # permission Cloudflare's "Run a query" endpoint accepts.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node .github/p4-test-worker/check.mjs
+
+      - name: Stop wrangler tail
+        if: always()
+        run: kill "$(cat "$RUNNER_TEMP/tail.pid" 2>/dev/null)" 2>/dev/null || true
+
+      # The report only: no logs, no tail output, nothing from the database.
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p4-test-worker-report
+          path: ${{ runner.temp }}/p4-report/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Reminder
+        if: always()
+        run: |
+          echo "::notice::sagas-app-test stays up until you run this workflow with action 'delete'."\
+            "Deleting it leaves the sponsor's Hyperdrive configuration in place."
+
+  delete:
+    if: >-
+      inputs.action == 'delete' &&
+      github.repository == 'byui-cse397/2026.3FallCSE397PCP_sagasCustomer' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: ./tooling/github/setup
+
+      # The name comes from the test Worker's configuration, so this can only
+      # ever delete sagas-app-test. Deleting it also deletes its secret.
+      - name: Delete sagas-app-test
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: pnpm exec wrangler delete --config "$CONFIG"
+
+      - name: Confirm it's gone
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          status=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings")
+          if [ "$status" = "404" ]; then
+            echo "sagas-app-test is deleted."
+          else
+            echo "::error::sagas-app-test still answers the API (HTTP $status)."
+            exit 1
+          fi
