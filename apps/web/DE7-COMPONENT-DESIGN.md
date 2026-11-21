@@ -6,6 +6,11 @@
 
 ## Design basis
 
+The shared brand direction is recorded in
+[`DE13-BRAND-DESIGN.md`](./DE13-BRAND-DESIGN.md). This document defines the
+component-specific states; the brand document defines the palette, type, and
+asset source.
+
 The team adopts the current neutral values in `apps/landing/src/tokens.css` as
 the starting token set for De7. The source labels these values temporary while
 the shared De1 token work is completed; De7 should use the same names and remain
