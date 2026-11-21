@@ -559,7 +559,7 @@ questions issue.
 
 ### De12 · Show the terms (Michael)
 
-**Workstream:** Design. **Status:** Draft.
+**Workstream:** Design. **Status:** Draft. The web-app page is implemented; the landing-page link awaits sponsor approval in [#11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11).
 
 **Goal.** Anyone can read the terms before they hand anything over. The landing page and the
 full app both lead to them.
@@ -652,7 +652,7 @@ of its own.
 **Done when** M6 draws from it, and every fixture site comes back with the
 neighbourhood whose boundary contains its coordinates.
 
-### De11 · How the map shows neighbourhoods, and a home inside one
+### De11 · How the map shows neighbourhoods, and a home inside one (Michael)
 
 **Workstream:** Design. **Status:** Ready.
 

@@ -29,7 +29,6 @@
  * alongside the map and when no Mapbox token is configured.
  */
 
-import Link from 'next/link';
 import { DEFAULT_SITE, getSiteState, listSites } from '@sagas/read-model';
 import { ArticleView } from '@/features/article/ArticleView';
 import { MapView, summariseSite } from '@/features/map/MapView';
@@ -64,17 +63,6 @@ export default function Page() {
 
       <ArticleView state={state} />
 
-      <footer className="border-t border-neutral-200 pt-5 text-sm text-neutral-600">
-        <Link href="/terms" className="underline">
-          Contributor terms
-        </Link>{' '}
-        ·{' '}
-        <Link href="/dev" className="underline">
-          /dev
-        </Link>{' '}
-        renders these components against all four fixture states with the
-        acceptance cases for each.
-      </footer>
     </div>
   );
 }
