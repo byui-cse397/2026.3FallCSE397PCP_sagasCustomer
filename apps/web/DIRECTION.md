@@ -8,11 +8,6 @@ specification meetings, as the first steps land.
 Decided means you can build on it. Open means nobody has an answer yet, and a
 proposal from you is useful input even when it turns out to be wrong.
 
-The shared brand direction is recorded in
-[`DE13-BRAND-DESIGN.md`](./DE13-BRAND-DESIGN.md). De-specific documents point
-there for colors, type, logo assets, and accessibility constraints rather than
-repeating brand values.
-
 ---
 
 ## The narrative page
