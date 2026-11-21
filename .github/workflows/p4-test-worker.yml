@@ -366,18 +366,20 @@ jobs:
       # The name is the workflow's WORKER_NAME, so this can only ever delete
       # sagas-app-test. Deleting it also deletes its secret.
       #
-      # This is the request `wrangler delete` makes, without Wrangler. After
-      # deleting the Worker, Wrangler 4.151 lists the account's KV namespaces
-      # to remove old Workers Sites ones. The deploy token has no KV
-      # permission, so the first delete run failed there (code 10000), after
-      # the Worker was already deleted, and never reached the check below.
+      # Cloudflare's documented Delete Worker endpoint, called directly rather
+      # than through `wrangler delete`. After deleting the Worker (through the
+      # older /workers/services/ path), Wrangler 4.151 lists the account's KV
+      # namespaces to remove old Workers Sites ones. The deploy token has no
+      # KV permission, so the first delete run failed there (code 10000),
+      # after the Worker was already deleted, and never reached the check
+      # below. force=false: Cloudflare refuses if another Worker references it.
       - name: Delete sagas-app-test
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           status=$(curl -s -o "$RUNNER_TEMP/delete.json" -w '%{http_code}' -X DELETE \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/services/$WORKER_NAME?force=false")
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME?force=false")
           case "$status" in
             2??) echo "Cloudflare accepted the delete (HTTP $status)." ;;
             404) echo "sagas-app-test was already gone (HTTP 404)." ;;
