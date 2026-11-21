@@ -1,0 +1,167 @@
+# The database warmer (P8): deploys or deletes sagas-db-warmer, a Worker whose
+# Cron Trigger keeps the hosted database from pausing. What it does, how to
+# check it and how to turn it off: apps/db-warmer/README.md.
+#
+# Manual only, and only from main. The Worker changes rarely, so a merge to
+# main doesn't deploy it. Once deployed, it runs on the sponsor's account
+# without this workflow, the repository or the token.
+#
+# SECRETS
+# CLOUDFLARE_API_TOKEN, the same token as the landing page and the P4 test
+# Worker, which can create, update and delete Workers and bind Hyperdrive. The
+# Worker itself has no secret: the connection string lives in the sponsor's
+# Hyperdrive configuration sagas-supabase. SUPABASE_DATABASE_URL isn't used.
+
+name: Database warmer
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "deploy: publish sagas-db-warmer and its schedule. delete: remove it."
+        type: choice
+        options: [deploy, delete]
+        default: deploy
+
+permissions:
+  contents: read
+
+# One run at a time; a second waits rather than cutting a deploy short.
+concurrency:
+  group: db-warmer
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  WRANGLER_SEND_METRICS: false
+  WORKER_NAME: sagas-db-warmer
+  # The sponsor's account, as in apps/db-warmer/wrangler.jsonc. Not a secret.
+  CLOUDFLARE_ACCOUNT_ID: 5e302dc6f0aa3537025b0e20b28ca23f
+
+jobs:
+  deploy:
+    if: >-
+      inputs.action == 'deploy' &&
+      github.repository == 'byui-cse397/2026.3FallCSE397PCP_sagasCustomer' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Same Node, pnpm and install steps that ci.yml uses.
+      - uses: ./tooling/github/setup
+
+      # Includes a dry-run bundle, so a Worker that doesn't build stops here.
+      - name: Test the warmer
+        run: pnpm --filter @sagas/db-warmer test
+
+      # The Worker name in the configuration must be the one this workflow
+      # checks and deletes, or delete could miss what deploy made. Also passes
+      # the configured schedule to the read-back step. An empty list is
+      # allowed: it's how the README turns the warmer off for good.
+      - name: Does the configuration name sagas-db-warmer?
+        id: config
+        working-directory: apps/db-warmer
+        run: |
+          # shellcheck disable=SC2016 # the single quotes hold JavaScript
+          node --input-type=module -e '
+            const { appendFileSync } = await import("node:fs");
+            const { unstable_readConfig } = await import("wrangler");
+            const config = unstable_readConfig({ config: "wrangler.jsonc" });
+            if (config.name !== process.env.WORKER_NAME) {
+              console.error(`::error::wrangler.jsonc names "${config.name}", not "${process.env.WORKER_NAME}".`);
+              process.exit(1);
+            }
+            const crons = config.triggers.crons ?? [];
+            console.log(`${config.name}: ${crons.length > 0 ? crons.join(", ") + " (UTC)" : "no schedule (turned off)"}`);
+            appendFileSync(process.env.GITHUB_OUTPUT, `crons=${[...crons].sort().join(",")}\n`);
+          '
+
+      - name: Deploy sagas-db-warmer
+        id: deploy
+        working-directory: apps/db-warmer
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: pnpm exec wrangler deploy
+
+      - name: If the deploy was refused
+        if: failure() && steps.deploy.outcome == 'failure'
+        run: |
+          echo "::error::The deploy failed. If the error above is an authentication error"\
+            "(code 10000), the token may lack a permission this Worker needs, such as"\
+            "setting Cron Triggers. Ask the sponsor in #11; deploys go only through this pipeline."
+
+      # Reads back what Cloudflare holds and compares it with wrangler.jsonc,
+      # so the run's log shows the schedule took, or that it's off on purpose.
+      # A token that can't read schedules gets a warning, not a failure.
+      - name: Does Cloudflare hold the configured schedule?
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CONFIGURED: ${{ steps.config.outputs.crons }}
+        run: |
+          status=$(curl -s -o "$RUNNER_TEMP/schedules.json" -w '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/schedules")
+          if [ "$status" != "200" ]; then
+            echo "::warning::Couldn't read the schedule back (HTTP $status). Check it in the dashboard."
+            exit 0
+          fi
+          held=$(jq -r '[.result.schedules[]?.cron] | sort | join(",")' "$RUNNER_TEMP/schedules.json")
+          if [ "$held" != "$CONFIGURED" ]; then
+            echo "::error::Cloudflare holds \"${held:-no schedule}\", but wrangler.jsonc says \"${CONFIGURED:-no schedule}\"."
+            exit 1
+          fi
+          if [ -z "$held" ]; then
+            echo "$WORKER_NAME has no schedule, as wrangler.jsonc says: the warmer is off."
+            echo "The database pauses after about a week with no other activity."
+          else
+            echo "Cloudflare runs $WORKER_NAME on: $held (UTC)."
+          fi
+          echo "Changes to a schedule can take up to 15 minutes to reach every location."
+
+  delete:
+    if: >-
+      inputs.action == 'delete' &&
+      github.repository == 'byui-cse397/2026.3FallCSE397PCP_sagasCustomer' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The name is the workflow's WORKER_NAME, so this can only ever delete
+      # sagas-db-warmer. Deleting a Worker deletes its Cron Trigger; the
+      # Hyperdrive configuration stays. Cloudflare's Delete Worker endpoint,
+      # not `wrangler delete`, which also lists KV namespaces the token can't
+      # read (#70). force=false: Cloudflare refuses if another Worker uses it.
+      - name: Delete sagas-db-warmer
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          status=$(curl -s -o "$RUNNER_TEMP/delete.json" -w '%{http_code}' -X DELETE \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME?force=false")
+          case "$status" in
+            2??) echo "Cloudflare accepted the delete (HTTP $status)." ;;
+            404) echo "$WORKER_NAME was already gone (HTTP 404)." ;;
+            *)
+              echo "::error::Cloudflare refused the delete (HTTP $status)."
+              jq -r '.errors[]? | "  \(.code): \(.message)"' "$RUNNER_TEMP/delete.json" || true
+              exit 1
+              ;;
+          esac
+
+      - name: Confirm it's gone
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          status=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings")
+          if [ "$status" = "404" ]; then
+            echo "$WORKER_NAME is deleted. The database pauses after about a week with no other activity."
+          else
+            echo "::error::$WORKER_NAME still answers the API (HTTP $status)."
+            exit 1
+          fi

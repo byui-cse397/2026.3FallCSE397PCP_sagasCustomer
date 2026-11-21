@@ -159,6 +159,10 @@ own branch and pull request by one person. Do not run `git pull upstream`,
   Hyperdrive binding, the Worker's entry (`apps/web/src/cloudflare/worker.ts`)
   gives the app Hyperdrive's string as `DATABASE_URL` instead, and the secret
   is used only to check the direct route.
+- The database warmer (`apps/db-warmer`, P8) reads the hosted database on a
+  schedule, through the same Hyperdrive configuration. It has no secret of its
+  own and doesn't use `SUPABASE_DATABASE_URL`. Keep it read-only: its one
+  query runs in a `READ ONLY` transaction (`apps/db-warmer/src/warm.ts`).
 - The hosted connection string contains the database password. Never ask for
   it, print it, or write it into a file, a commit, an issue or a pull request.
 

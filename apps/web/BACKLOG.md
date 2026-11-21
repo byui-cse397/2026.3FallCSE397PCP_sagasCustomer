@@ -360,7 +360,7 @@ load, so use a public token with no secret scopes, and limit it to the preview
 address if Mapbox lets you. When the work moves upstream, the sponsor puts his
 own token there, and you keep using yours.
 
-### P8 · Keep the hosted database awake
+### P8 · Keep the hosted database awake (Ema)
 
 **Workstream:** Platform. **Status:** Ready once you have database access.
 
