@@ -631,7 +631,7 @@ questions issue.
 
 ### De12 · Show the terms (Michael)
 
-**Workstream:** Design. **Status:** Draft. The web-app page is implemented; the landing-page link awaits sponsor approval in [#11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11).
+**Workstream:** Design. **Status:** Draft. The web-app page is implemented; the landing-page link is a follow-up pending a sponsor request and approval in [#11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11).
 
 **Goal.** Anyone can read the terms before they hand anything over. The landing page and the
 full app both lead to them.

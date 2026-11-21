@@ -16,9 +16,14 @@ conflict on a later pull.
 - What works now, in a sentence a visitor would understand. (#pull request number, who)
 ```
 
+## 2026-11-21
+
+- Every page of the web app, including the terms page and the not-found page, has a footer link to the contributor terms. ([#71](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/71), Michael)
+
 ## 2026-11-16
 
 - The map and searchable place list support name and address search, follow the current map area with a reversible filter, keep provisional integrity symbols visible on pins and list entries, and remain usable without a Mapbox token. (#56, Sam)
+
 ## 2026-11-14
 
 - Visitors to the web app can open the shared contributor terms from its footer. ([#64](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/64), Michael)
