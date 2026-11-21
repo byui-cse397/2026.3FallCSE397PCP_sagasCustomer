@@ -40,6 +40,11 @@ Use `/dev` while you build. A component that looks right against `t3` and falls
 apart against `t0` is the normal failure, and `t0` is the state most real places
 sit in for a long time.
 
+`/dev` is a development tool, so `SAGAS_DEV_SANDBOX` decides where it runs: on
+under `pnpm dev` and in tests, off in a production build unless a deployment
+sets it to `on`: the fixture preview (P7) will, and the public site won't. See
+`src/lib/dev-sandbox.ts`.
+
 **You do not need a Mapbox token to work on this.** With no token, the map area
 renders a list of the same places instead. That list is also how the map's
 information reaches someone using a screen reader, so it ships either way and

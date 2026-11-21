@@ -153,8 +153,15 @@ Mapbox token.
 **Goal.** Somebody can find a site by typing part of its name, or by moving the
 map.
 
-**Done when:** a search field filters sites by name, other names and address,
-and the list follows the area the map shows. It works from the keyboard.
+**Done when:** a search field filters sites by name and other names, and the
+list follows the area the map shows. It works from the keyboard.
+
+**Never search by address** (changed 18 November). This story used to say
+"and address", which was wrong. Matching on an address would tell anyone who
+types a street address that a place sits there, and some of these places are
+homes. For the same reason, don't show a site's address on the map, the list or
+a place's page, and show the neighbourhood instead (M8). The `address` field is
+still in the contract until a coming change deals with it.
 
 ### M3 · Site icons (Sam)
 
@@ -346,6 +353,13 @@ and its reason are in a one-page decision record, and the README says how to
 roll back. Publishing can run from GitHub Actions on every merge, or one
 person can manage releases for everyone. Either is fine.
 
+**The Mapbox token** (added 19 November). The published map uses a Mapbox
+token from one of you. Give it to the build as a GitHub Actions setting and
+never commit it. Anything named `NEXT_PUBLIC_` ends up in the page anyone can
+load, so use a public token with no secret scopes, and limit it to the preview
+address if Mapbox lets you. When the work moves upstream, the sponsor puts his
+own token there, and you keep using yours.
+
 ### P8 · Keep the hosted database awake
 
 **Workstream:** Platform. **Status:** Ready once you have database access.
@@ -361,6 +375,64 @@ what it does and how to turn it off.
 
 **Not in this story.** Anything else to do with keeping the database up, like backups or
 monitoring.
+
+### P9 · Bring the contributing screens into the site
+
+**Workstream:** Platform. **Status:** Later. Needs the content layer's screens upstream in
+`apps/capture-web`. Added 18 November.
+
+**Goal.** The live site is one app, so the content layer's screens for handing something over
+(`apps/capture-web`, React with Vite and `react-router`) need to open inside `apps/web`. The
+quick way leaves their folder where it is. `apps/capture-web` is already a workspace package,
+`@sagas/capture-web`, so the site imports their app and shows it on one page. The content layer
+keeps working in their folder as usual, and can still run it on its own with Vite.
+
+**How to do it:**
+- Add `@sagas/capture-web` to `apps/web`'s dependencies (`workspace:*`), and list it in
+  `transpilePackages` in the Next.js config so Next.js compiles it.
+- Add one catch-all page, `src/app/contribute/[[...path]]/page.tsx`, marked `'use client'`, that
+  renders their `App` inside a `BrowserRouter` with `basename="/contribute"`. Their own routes
+  then work underneath it, like `/contribute/sites/...`.
+- Their package needs to export `App` from `src/index.ts`. If it doesn't yet, ask in an issue
+  upstream, tagging the content layer and me, since that file is theirs.
+- Check two things as you go: their `globals.css`, which can clash with the site's styles, and any
+  Vite settings their code reads (`import.meta.env.VITE_…`), which become Next.js settings
+  (`process.env.NEXT_PUBLIC_…`).
+
+**Done when:**
+- The contributing screens open under `/contribute` in `apps/web`, work the way they do in
+  `apps/capture-web`, and use the brand like the rest of the site.
+- They call the content layer's API with its address as a setting.
+- The site builds and deploys with them, and `apps/capture-web` doesn't need hosting of its own.
+
+**Not in this story.** Moving or rewriting their screens, or turning each of their routes into a
+Next.js page of its own, which can come later. Hosting the content layer's API, which is P10's
+question. Combining creating a place and reading it into one flow. For now there are two
+screens: theirs for creating a place and handing over a record, and yours for reading. Their place
+screens overlap your map and place page, so bringing the two together would be better, and it's
+an open stretch goal for both teams (sponsor, 19 November).
+
+### P10 · Find out whether the two Express APIs run on Workers Free
+
+**Workstream:** Platform. **Status:** Ready. Added 18 November.
+
+**Goal.** The content layer's `capture-api` and the intelligence layer's `graph-api` are both
+Express 5 apps, written for an ordinary Node server. You'll host both on Cloudflare with
+everything else, and whether Express runs on Workers Free as it is decides whether that's a
+small deploy or a rewrite. Find out before either team is finished, so there's time to adjust.
+
+**Done when** a short write-up on #34 answers:
+- Does an Express 5 app run on Workers Free, and what does it need (a compatibility setting, an
+  adapter, changes to the code)? Link the Cloudflare page that says so.
+- Does the Postgres connection go through Hyperdrive, the same as the full app's?
+- Does one small request fit inside the free plan's CPU limit?
+- If Express doesn't run, what's the smallest change that gets each API hosted?
+
+A tiny Express app with one route, deployed to a test Worker and removed afterwards, is the
+clearest proof, using the same conditions as P4: the `workers.dev` address only and fixture data
+only.
+
+**Not in this story.** Hosting either API for real. Changing either team's code.
 
 ### Da8 · A schema for what the site saves
 
@@ -567,6 +639,9 @@ full app both lead to them.
 **Done when:**
 - A page shows `docs/TERMS.md`, read from that file so the two can't drift apart.
 - The landing page and the full app both link to it.
+- Every page of the full app has a footer that links to the terms, so anyone who types into the site
+  or hands something over can find them (sponsor, 19 November). That includes the contributing
+  screens once P9 brings them in.
 
 **Not in this story.** Accepting the terms, which is on the capture screen. The wording,
 which is the sponsor's.
@@ -624,8 +699,8 @@ Some of these use the freight depot, which came with contract 2.4.0. Your fork h
 
 ### M6 · Neighbourhood shapes on the map
 
-**Workstream:** Map and discovery. **Status:** Later. Needs M1, and the
-boundary data, which the sponsor will provide.
+**Workstream:** Map and discovery. **Status:** Ready. Needs M1. The boundary
+data is in `packages/fixtures/geo/`.
 
 **Goal.** Places sit inside neighbourhood shapes on the map. The sponsor has
 decided that a home is shown at neighbourhood or subdivision level until the people it
@@ -637,8 +712,34 @@ on the map itself, each fixture site falls inside the shape whose boundary
 contains its coordinates, and it works on a phone and with or without a
 Mapbox token, like M1.
 
-**Not in this story.** Moving a home's pin to its neighbourhood. The contract
-doesn't mark a place as a home yet, and that gets its own story once it does.
+**Not in this story.** Moving a place's pin into its neighbourhood, which is
+M8. The boundary data is in `packages/fixtures/geo/`.
+
+### M8 · Show each place inside its neighbourhood
+
+**Workstream:** Map and discovery. **Status:** Ready. Added 18 November. Goes
+with M6 and De11.
+
+**Goal.** For now, the map never puts a pin on a place's real coordinates. It
+shows each place inside the neighbourhood it's in, with the places in one
+neighbourhood spaced evenly inside its shape. A reader learns the neighbourhood
+and nothing more precise. This is a stopgap I've chosen so you aren't waiting on
+anyone. Later the content layer may give each place a safe area to draw
+instead, and we'll decide then whether the map draws from that.
+
+**Done when:**
+- Each pin sits inside its place's neighbourhood, at a spot worked out from the
+  neighbourhood's shape and the places in it, never from the place's own
+  coordinates. How you space them is your choice.
+- A pin sits in the same spot every time the map loads. A random offset would
+  give the real spot away to anyone who loads the map enough times.
+- Zooming in shows nothing more precise.
+- The list and a place's page name the neighbourhood, never an address.
+- If a place falls outside every neighbourhood, tell me rather than guess.
+
+**Not in this story.** Showing a public place, like a park or a library, at its
+exact spot. The contract doesn't say which places are public yet. Drawing from
+an area the content layer supplies.
 
 ### Da9 · Neighbourhood shapes in the read model
 
@@ -979,6 +1080,10 @@ commits one.
 - The fixture sites in view stay visible as pins after the search, so a site
   near the result is one click away.
 - It works from the keyboard and with a screen reader.
+- The search only moves the map. It never looks a site up by its address or its
+  stored location, so the sites you see afterwards are the pins the map already
+  shows (sponsor, 19 November). A search that matched a site's real location
+  would let anyone try homes one at a time until one turned out to be a site.
 
 **Part of the story:** find out which Mapbox service does address search, what
 its free allowance is, and whether results may be stored. Write down what you
@@ -997,8 +1102,10 @@ is not part of this layer's work.
 
 - A list view shows every site the map shows, and it is reachable whether or not
   a Mapbox token is set. `MapUnavailable` is where it starts.
-- A search field filters the list by site name, other names (`aka`) and address.
-  This searches the fixture data, so it works with no Mapbox token.
+- A search field filters the list by site name and other names (`aka`). This
+  searches the fixture data, so it works with no Mapbox token. It never matches
+  on an address, and the list doesn't show one. M2 says why (changed 18
+  November).
 - Each entry says in words how well documented the place is.
 
 ### B4 · Only load the sites in view
@@ -1150,6 +1257,27 @@ holding one snapshot per moment.
 **Not in this story.** Contributions from the other layers. They arrive with integration, in
 the same shape.
 
+### Da12 · Mock what another layer hasn't delivered yet
+
+**Workstream:** Data. **Status:** Ready. Added 18 November.
+
+**Goal.** Your pages shouldn't wait on another layer. Where the site needs something another
+layer will provide, like a claim written through the intelligence layer or a place created in
+the content layer's capture app, mock it on your side in the shape `model.ts` gives it. Then,
+when the real thing arrives, only the mock changes. The fixtures already mock scores. They
+fill `claimState.score` with invented numbers in the `claimScore` shape.
+
+**Done when:**
+- A short list in the fork says what the site needs from the other two layers, which `model.ts`
+  shape each one has, and whether it's real or mocked today.
+- Each mocked item has a mock in your app that returns that shape, in one place, so swapping in
+  the real call later is a small change.
+- If the site needs something `model.ts` doesn't have, you open an issue upstream, tagging me,
+  and don't make up a shape locally. Three layers build on the contract, so a shape only one of
+  them knows about drifts.
+
+**Not in this story.** Changing `packages/fixtures` or `packages/contracts`. Those go upstream.
+
 ### D2 · Explore a place one claim at a time
 
 **Workstream:** Design, with Data. **Status:** Ready. It's a stretch goal, and your statement of
@@ -1223,3 +1351,32 @@ layer's matching, which plugs in later as one more input.
 How claims, records and renderings cite each other on the page, and how
 somebody links to one claim. See `apps/web/DIRECTION.md`. Stories get written
 once C1 and C3 exist.
+
+### E1 · Mark the references in a claim's text
+
+**Workstream:** Design. **Status:** Ready. Added 19 November.
+
+**Goal.** A claim can mark words in its text as a reference: a date, a place, a person or a
+record (`claimReference` in `model.ts`). Wherever the site shows a claim's text, a reader should
+see which words are references.
+
+**The picture so far** (sponsor, 19 November):
+- Underline each reference in its kind's colour, and put a small magnifying glass at its upper
+  right. Colour isn't the only cue, so the kind also shows as a label or icon, the way D2
+  describes.
+- For now the magnifying glass only marks the words as a reference. Choosing it does nothing yet.
+- References look different from details, the passages other claims point at, which the place
+  page already highlights.
+
+**Done when:**
+- Every page that shows a claim's text marks every reference this way: the place page now, and
+  explore mode once D2 exists. A reference always gets a magnifying glass, whatever its status.
+- It works from the keyboard, and a screen reader reads out each reference's kind.
+
+**Worth knowing.** The fixtures already have date, person and place references, all confirmed.
+The contract also allows a `suggested` status. For now, show a suggested reference exactly like a
+confirmed one (sponsor, 19 November).
+
+**Not in this story.** A page for a reference that shows how it's used across Sagas, which may
+come later. Adding or confirming references while writing a claim. Changing `packages/fixtures`
+or `packages/contracts`.
