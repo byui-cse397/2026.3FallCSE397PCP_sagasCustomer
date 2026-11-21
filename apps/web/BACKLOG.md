@@ -886,10 +886,10 @@ its links, and choosing one opens D2's screen.
 
 **Not in this story.** A graph of a whole site, or of everything.
 
-### De13 · Colour and type from the brand
+### De13 · Colour and type from the brand (Michael)
 
-**Workstream:** Design. **Status:** Later. Needs the sponsor's logo, colours and font, which he's
-making.
+**Workstream:** Design. **Status:** Ready. Sponsor assets are available in
+`packages/brand/`; the design record is `apps/web/DE13-BRAND-DESIGN.md`.
 
 **Goal.** The site and the map stop being grey. The landing page, the app and the map share the
 brand's colours and type, through your design tokens, so a change happens in one place.

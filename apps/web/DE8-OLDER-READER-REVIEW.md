@@ -4,6 +4,10 @@
 
 **Story:** De8 — Readable for an older reader
 
+The brand palette and assets are governed by
+[`DE13-BRAND-DESIGN.md`](./DE13-BRAND-DESIGN.md). Any token change must repeat
+the contrast and touch-target checks recorded below.
+
 ## Acceptance criteria
 
 De8 is complete when the team has documented what it checked and changed, and
