@@ -1,0 +1,158 @@
+import Link from 'next/link';
+import { ACCEPTANCE_CRITERIA } from '@sagas/fixtures/acceptance';
+// Bundled at build time. `loadIndex()` reads this file from the repository on
+// every request, and a deployed Worker has no repository to read it from.
+import statesIndex from '@sagas/fixtures/states/index.json';
+import type { FixtureStateId } from '@/lib/queries';
+import { DEFAULT_SITE, FIXTURE_STATES, getSiteState, listSites } from '@/lib/queries';
+import { ArticleView } from '@/features/article/ArticleView';
+import { MapView, summariseSite } from '@/features/map/MapView';
+
+/**
+ * A sandbox for looking at your components against every fixture state.
+ *
+ * Pick a site and a state at the top. Everything below re-renders against it.
+ * The acceptance criteria for that site and state are listed underneath, so you
+ * can read the requirement and look at the thing at the same time.
+ *
+ * Use it while you build. A component that looks right on t3 and falls apart on
+ * t0 is the normal failure, and t0 is the state most real places sit in.
+ *
+ * This page has no styling worth keeping and is not a layout suggestion. Change
+ * it, add to it, or throw it away once you have something better. If your team
+ * adds Storybook, this is the thing it replaces.
+ *
+ * `page.tsx` decides whether the sandbox answers at all and loads this file
+ * only when it does, so a refused request never loads a fixture.
+ */
+export function DevSandbox({
+  requested,
+  requestedSite,
+}: {
+  requested?: string;
+  requestedSite?: string;
+}) {
+  const stateId = (
+    FIXTURE_STATES.includes(requested as FixtureStateId) ? requested : 't3'
+  ) as FixtureStateId;
+
+  // Acceptance cases name a site by its fixture directory, and pages use slugs.
+  const index = statesIndex.sites;
+  const entry = index.find((s) => s.slug === requestedSite) ?? index.find((s) => s.slug === DEFAULT_SITE);
+  const slug = entry?.slug ?? DEFAULT_SITE;
+
+  const state = getSiteState(slug, stateId);
+  const sites = listSites(stateId).map((site) =>
+    summariseSite(site, getSiteState(site.slug, stateId).integrity),
+  );
+  const cases = ACCEPTANCE_CRITERIA.filter((c) => c.stateId === stateId && c.site === entry?.key);
+  const stateIndex = FIXTURE_STATES.indexOf(stateId);
+  const previousState = stateIndex > 0 ? FIXTURE_STATES[stateIndex - 1] : undefined;
+  const nextState = stateIndex < FIXTURE_STATES.length - 1 ? FIXTURE_STATES[stateIndex + 1] : undefined;
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-8 p-8 font-sans">
+      <header className="space-y-2">
+        <h1 className="text-lg font-semibold">Component sandbox</h1>
+        <p className="text-sm text-neutral-600">
+          Fixture data. Every contributor and event is invented for development.
+        </p>
+        <nav className="flex flex-wrap gap-2 text-sm">
+          {index.map((s) => (
+            <Link
+              key={s.key}
+              href={`/dev?site=${s.slug}&state=${stateId}`}
+              className={
+                s.slug === slug ? 'rounded border px-2 py-1 font-semibold' : 'rounded border px-2 py-1'
+              }
+            >
+              {s.name}
+            </Link>
+          ))}
+        </nav>
+        <nav
+          aria-label="Fixture history, oldest to newest"
+          className="flex flex-wrap items-center gap-2 text-sm"
+        >
+          {previousState ? (
+            <Link href={`/dev?site=${slug}&state=${previousState}`} className="rounded border px-2 py-1">
+              Previous state
+            </Link>
+          ) : (
+            <span aria-disabled="true" className="rounded border px-2 py-1 text-neutral-500">
+              Previous state
+            </span>
+          )}
+          {FIXTURE_STATES.map((id) => (
+            <Link
+              key={id}
+              href={`/dev?site=${slug}&state=${id}`}
+              aria-current={id === stateId ? 'page' : undefined}
+              className={
+                id === stateId
+                  ? 'rounded border border-neutral-900 px-2 py-1 font-semibold underline'
+                  : 'rounded border px-2 py-1'
+              }
+            >
+              {id}
+            </Link>
+          ))}
+          {nextState ? (
+            <Link href={`/dev?site=${slug}&state=${nextState}`} className="rounded border px-2 py-1">
+              Next state
+            </Link>
+          ) : (
+            <span aria-disabled="true" className="rounded border px-2 py-1 text-neutral-500">
+              Next state
+            </span>
+          )}
+          <span aria-live="polite">Viewing {stateId}</span>
+        </nav>
+        <p className="text-sm text-neutral-600">
+          {state.claims.length} claim(s) · integrity {state.integrity.overall}/100 ·{' '}
+          {state.eventIdsApplied.length} contributions applied
+        </p>
+      </header>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide">Map</h2>
+        <div className="border p-4">
+          <MapView sites={sites} />
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide">Article</h2>
+        <div className="border p-4">
+          <ArticleView state={state} />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide">
+          What has to be true here at {stateId}
+        </h2>
+        {cases.length === 0 ? (
+          <p className="text-sm text-neutral-600">No cases listed for this site at this state.</p>
+        ) : (
+          <ul className="space-y-3">
+            {cases.map((c) => (
+              <li key={c.id} className="border-l-2 pl-3 text-sm">
+                <div className="font-mono text-xs text-neutral-500">
+                  {c.id} · {c.severity}
+                  {c.subject ? ` · ${c.subject}` : ''}
+                </div>
+                <p className="mt-1">{c.situation}</p>
+                <p className="mt-1 text-neutral-600">{c.requirement}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-sm text-neutral-600">
+          The full list, including the situations no fixture covers yet, is in{' '}
+          <code>packages/fixtures/README.md</code>.
+        </p>
+      </section>
+    </div>
+  );
+}

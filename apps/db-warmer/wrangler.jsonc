@@ -1,0 +1,42 @@
+// The database warmer (P8): a Worker with a Cron Trigger and nothing else.
+// What it does and how to turn it off: README.md beside this file.
+//
+// It is deployed and deleted only by .github/workflows/db-warmer.yml, on the
+// sponsor's account. The account ID is not a secret (sponsor, 12 Oct 2026).
+//
+// No public address: no routes, workers.dev off, and the Worker has no fetch
+// handler. Cloudflare's scheduler is the only thing that runs it.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sagas-db-warmer",
+  "account_id": "5e302dc6f0aa3537025b0e20b28ca23f",
+  "main": "src/index.ts",
+  // The runtime Wrangler ships with, as in apps/web/wrangler.test-worker.jsonc.
+  "compatibility_date": "2026-10-12",
+  // pg needs Node's APIs; its sockets come from pg-cloudflare.
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  // Every six hours, at 17 minutes past (UTC): 00:17, 06:17, 12:17, 18:17.
+  // One trigger, so it uses one of the account's five on Workers Free.
+  // Wrangler manages this list: a trigger deleted in the dashboard comes back
+  // on the next deploy, so a permanent change goes through this file.
+  "triggers": {
+    "crons": ["17 */6 * * *"],
+  },
+  // The Hyperdrive configuration sagas-supabase, in the sponsor's account
+  // (#11, 20 Nov 2026): Supabase's Direct connection host, caching off. It
+  // holds the connection string, password included, so this Worker has no
+  // secret of its own. The ID isn't a secret. P7 uses the same configuration.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "28a8d4b069ec4421aaede67c2e835519",
+    },
+  ],
+  // Each run, and its log line, shows in the dashboard.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+}

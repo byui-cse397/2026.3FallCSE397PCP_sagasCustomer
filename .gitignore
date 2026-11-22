@@ -8,6 +8,10 @@ build/
 .next/
 **/.next/
 out/
+# the Cloudflare build (OpenNext) and Wrangler's local state and secrets
+.open-next/
+.wrangler/
+.dev.vars*
 next-env.d.ts
 *.tsbuildinfo
 .cache
