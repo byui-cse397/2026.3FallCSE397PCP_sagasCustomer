@@ -326,38 +326,35 @@ page says what's new, with the copy approved the same way as before.
 
 ### P6 · An address for the full app (Ema)
 
-**Workstream:** Platform. **Status:** Ready to propose. Setting it up waits
-for P7.
+**Workstream:** Platform. **Status:** Ready. Decided 22 November.
 
-**Goal.** The full app needs its own address next to the landing page, such
-as a subdomain. Propose one, and say what it needs in DNS and from the hosting
-chosen in P4.
+**Goal.** The sponsor chose the addresses. Your fork publishes the app to
+`test.sagasproject.org`, the preview, with fixture data only. `app.sagasproject.org`, the public
+site, deploys from upstream (P12). The landing page stays at `sagasproject.org`.
 
-**Done when** the sponsor has agreed the address and the app answers on it.
-The Cloudflare token can't change DNS, so ask in the questions issue for the
-DNS change.
+**Done when** the app answers on `test.sagasproject.org`. Your Cloudflare token can't change the
+domain, so once the app runs from your fork on its `workers.dev` address, tag the sponsor in the
+questions issue and he attaches the subdomain to your Worker.
 
 ### P7 · Publish the full app, and decide on staging
 
 **Workstream:** Platform. **Status:** Later. Needs the sponsor's agreement on
 P4.
 
-**Goal.** Publish `apps/web` from the pipeline to a preview address that
-search engines skip, using fixture data only. Decide along the way whether the
-project needs a staging environment (a second copy for checking changes before
-they reach the preview), or whether publishing every merge to main is enough.
-The sponsor's lean is that main is enough if it works.
+**Goal.** Publish `apps/web` from the pipeline to `test.sagasproject.org` (P6),
+which search engines skip, using fixture data only. The staging question is
+answered (sponsor, 22 November): your fork's deployment is the staging copy, and
+the public site deploys from upstream (P12).
 
-**Done when** merges publish the app the way the decision says, the decision
-and its reason are in a one-page decision record, and the README says how to
-roll back. Publishing can run from GitHub Actions on every merge, or one
+**Done when** merges publish the app to `test.sagasproject.org`, and the
+README says how to roll back. Publishing can run from GitHub Actions on every merge, or one
 person can manage releases for everyone. Either is fine.
 
 **The Mapbox token** (added 19 November). The published map uses a Mapbox
 token from one of you. Give it to the build as a GitHub Actions setting and
 never commit it. Anything named `NEXT_PUBLIC_` ends up in the page anyone can
-load, so use a public token with no secret scopes, and limit it to the preview
-address if Mapbox lets you. When the work moves upstream, the sponsor puts his
+load, so use a public token with no secret scopes, and limit it to
+`test.sagasproject.org` if Mapbox lets you. When the work moves upstream, the sponsor puts his
 own token there, and you keep using yours.
 
 ### P8 · Keep the hosted database awake (Ema)
@@ -378,8 +375,8 @@ monitoring.
 
 ### P9 · Bring the contributing screens into the site
 
-**Workstream:** Platform. **Status:** Later. Needs the content layer's screens upstream in
-`apps/capture-web`. Added 18 November.
+**Workstream:** Platform. **Status:** Ready once the content layer's release pull request is open
+(Wednesday 2 December). Added 18 November.
 
 **Goal.** The live site is one app, so the content layer's screens for handing something over
 (`apps/capture-web`, React with Vite and `react-router`) need to open inside `apps/web`. The
@@ -393,8 +390,9 @@ keeps working in their folder as usual, and can still run it on its own with Vit
 - Add one catch-all page, `src/app/contribute/[[...path]]/page.tsx`, marked `'use client'`, that
   renders their `App` inside a `BrowserRouter` with `basename="/contribute"`. Their own routes
   then work underneath it, like `/contribute/sites/...`.
-- Their package needs to export `App` from `src/index.ts`. If it doesn't yet, ask in an issue
-  upstream, tagging the content layer and me, since that file is theirs.
+- Their `src/index.ts` exports nothing yet, and adding `App` to it is yours (sponsor, 22 November).
+  Suggest the one-line export on their release pull request, so they see it and agree, rather than
+  asking them to do it.
 - Check two things as you go: their `globals.css`, which can clash with the site's styles, and any
   Vite settings their code reads (`import.meta.env.VITE_…`), which become Next.js settings
   (`process.env.NEXT_PUBLIC_…`).
@@ -402,7 +400,8 @@ keeps working in their folder as usual, and can still run it on its own with Vit
 **Done when:**
 - The contributing screens open under `/contribute` in `apps/web`, work the way they do in
   `apps/capture-web`, and use the brand like the rest of the site.
-- They call the content layer's API with its address as a setting.
+- They call the content layer's API through `SAGAS_CAPTURE_API` (Da12), which points at the mock
+  until the sponsor merges their release.
 - The site builds and deploys with them, and `apps/capture-web` doesn't need hosting of its own.
 
 **Not in this story.** Moving or rewriting their screens, or turning each of their routes into a
@@ -433,6 +432,65 @@ clearest proof, using the same conditions as P4: the `workers.dev` address only 
 only.
 
 **Not in this story.** Hosting either API for real. Changing either team's code.
+
+### P11 · A guide to the content layer's screens on the live site
+
+**Workstream:** Platform. **Status:** Later. Needs P9 and P7. Added 22 November.
+
+**Goal.** The content layer presents their work in the week of 7 December, and they may want to show
+it on the live site. They haven't seen the site, so they need a short guide to finding their screens
+on it.
+
+**Done when:**
+- A one-page guide says where the live site is, how to reach the contributing screens from the home
+  page, and what each of their screens looks like inside the site, with a screenshot of each.
+- It says which parts use the mocks and which use their real API, so nothing they show is a surprise.
+- It goes to the content layer, in an issue upstream tagging them and the sponsor, with the site on
+  Monday 7 December.
+
+**Not in this story.** Changing their screens. A guide to the rest of the site.
+
+### P12 · Deploy the landing page and the app from upstream
+
+**Workstream:** Platform. **Status:** Later. Needs P7. Added 22 November.
+
+**Goal.** Your fork belongs to your course and its deploy key ends with the semester, so the public
+site has to deploy from `Civum/sagas` before you finish. Your fork keeps deploying
+`test.sagasproject.org` until then.
+
+**Done when:**
+- The deploy workflows for the landing page and the app go upstream in the second release (Wednesday
+  9 December), with the secrets they need listed by name, never by value.
+- The sponsor adds those secrets and a production deploy key upstream, and the first deploy from
+  `Civum/sagas` puts `sagasproject.org` and `app.sagasproject.org` up in the week of 14 December.
+- When the first deploy from upstream runs, tag the sponsor on the pull request or #34, and he
+  attaches `app.sagasproject.org` to the Worker in the dashboard.
+- Your H1 handoff note says how to deploy from upstream and how to roll back.
+
+**Not in this story.** Real records on the site. Changing either site's code.
+
+### P13 · Upload links for files, on the test bucket (Ema)
+
+**Workstream:** Platform. **Status:** Ready. Added 22 November.
+
+**Goal.** Records with audio, photos or video need somewhere to keep the files. The design is in
+`apps/capture-api/README.md` ("Storage"): the browser uploads straight to storage through a short-
+lived upload link, and the server never handles the bytes. Building those links is now part of
+your integration work (sponsor, 22 November). The storage is Cloudflare R2, which speaks the same
+S3 API the code already uses, so the `S3_` settings in `.env.example` work with it.
+
+**Done when:**
+- The site can ask for an upload link, upload a file through it, and read the file back through a
+  short-lived read link, against the bucket `sagas-media-test`, from localhost and from
+  `test.sagasproject.org`.
+- The keys come from settings (`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
+  `S3_SECRET_ACCESS_KEY`, and `S3_REGION` set to `auto`), never committed. The sponsor sent Ema a key
+  limited to the test bucket.
+- Nothing stores a link. Store the file's key, and make a fresh link each time someone reads it.
+- Once you've tried it, the README says whether R2 needs `S3_FORCE_PATH_STYLE` true or false.
+
+**Not in this story.** Real records: the production bucket, `sagas-media`, is the sponsor's.
+Processing files after upload. The content layer's own upload screens, beyond what P9 brings in.
 
 ### Da8 · A schema for what the site saves
 
@@ -1257,26 +1315,27 @@ holding one snapshot per moment.
 **Not in this story.** Contributions from the other layers. They arrive with integration, in
 the same shape.
 
-### Da12 · Mock what another layer hasn't delivered yet
+### Da12 · Mount the shared mocks
 
-**Workstream:** Data. **Status:** Ready. Added 18 November.
+**Workstream:** Data. **Status:** Ready. Added 18 November, rewritten 22 November.
 
-**Goal.** Your pages shouldn't wait on another layer. Where the site needs something another
-layer will provide, like a claim written through the intelligence layer or a place created in
-the content layer's capture app, mock it on your side in the shape `model.ts` gives it. Then,
-when the real thing arrives, only the mock changes. The fixtures already mock scores. They
-fill `claimState.score` with invented numbers in the `claimScore` shape.
+**Goal.** Your pages shouldn't wait on another layer. Upstream now has `packages/mock-apis`:
+stand-ins for the content layer's API and the intelligence layer's API, on the routes upstream
+names, built from the fixtures. Mount them in the site, so every call to another layer goes
+through an address you can switch from the mock to the real API when that layer's release is
+merged. `packages/mock-apis/README.md` has the few lines it takes.
 
 **Done when:**
-- A short list in the fork says what the site needs from the other two layers, which `model.ts`
-  shape each one has, and whether it's real or mocked today.
-- Each mocked item has a mock in your app that returns that shape, in one place, so swapping in
-  the real call later is a small change.
-- If the site needs something `model.ts` doesn't have, you open an issue upstream, tagging me,
-  and don't make up a shape locally. Three layers build on the contract, so a shape only one of
-  them knows about drifts.
+- `apps/web` mounts both mocks at `/api/mock/capture` and `/api/mock/graph`, as the README shows.
+- The site reads each API's address from a setting, `SAGAS_CAPTURE_API` and `SAGAS_GRAPH_API`,
+  pointing at the mocks by default.
+- Switching to a real API, or back to the mock, is a change to that setting, made on purpose. It's
+  never automatic, so nobody reading the site sees invented places as if they were real ones.
+- If the site needs something neither mock has, mock it in your own code in the shape `model.ts`
+  gives it, and open an issue upstream tagging me, so it can go into the shared mocks.
 
-**Not in this story.** Changing `packages/fixtures` or `packages/contracts`. Those go upstream.
+**Not in this story.** Changing `packages/mock-apis`, `packages/fixtures` or `packages/contracts`.
+Those go upstream.
 
 ### D2 · Explore a place one claim at a time
 
