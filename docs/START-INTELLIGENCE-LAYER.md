@@ -217,8 +217,11 @@ problems under it, against the rules in `packages/fixtures/scoring`.
 and contributors, write the migrations, and move the graph out of memory and
 into Postgres. Spatial indexing lives here too.
 
-**November onward, propagation.** How weight actually moves through the graph,
-and whichever of the open questions you decide to take on.
+**November onward, propagation.** You work out how support actually moves
+through the graph, along with whichever of the open questions you decide to
+take on. For this
+phase, propagation is design only. `docs/PHASE-2-INTELLIGENCE-LAYER.md` says
+what that covers, under "Scoring is bigger than it looks".
 
 Contract 2.1.0 adds sections to a site's page, and producing them is also your
 work, after the scoring design. A section has a heading and a passage, with

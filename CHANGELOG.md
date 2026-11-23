@@ -41,6 +41,44 @@ it. This is the most useful field in the entry.
 
 ---
 
+## 2026-11-22 — releases, mock APIs, and an open question about the graph
+
+**Affects:** all three layers
+
+**What:** `docs/WORKING-TOGETHER.md` has a new section, "Releases at the end of the semester", with
+the dates and what each layer sends, and `docs/GIT.md` has "Sending a release". A new package,
+`packages/mock-apis`, stands in for the content layer's API and the intelligence layer's API until
+their releases are merged. `docs/DESIGN-QUESTIONS.md` has a new open question, "How does a claim's
+place in the graph count toward its score?", with a placeholder in the scoring rules. The
+`capture-web` and `capture-api` READMEs say who brings the contributing screens into the site and
+who builds the upload links.
+
+**Why:** the three semesters end on different days, so the layers come together early, and no
+layer has to wait for another's release to work against its routes.
+
+**You need to:**
+- *content layer* — read the release section. Your first release is a pull request by the end of
+  Wednesday 2 December.
+- *intelligence layer* — the same, and the new open question is yours.
+- *experience layer* — the same. Your backlog has the stories for mounting the mocks.
+
+## v2.7.2 — 2026-11-22
+
+**Affects:** intelligence layer, experience layer
+
+**What:** the comment on `claimScore` in `model.ts` now says a claim's score is its terms added up,
+and points at the open question about the graph. The fixtures' stand-in scorer no longer raises a
+total below 0.25 to 0.25. No fixture value changes, because no total was that low. The shape
+doesn't change.
+
+**Why:** a score you can check by adding up its terms is easier to explain and to trust, and the
+glossary in `apps/graph-api/BACKLOG.md` already said so.
+
+**You need to:**
+- *intelligence layer* — make your scorer's `score` the sum of its `terms`, if it isn't already.
+- *experience layer* — nothing.
+- *content layer* — nothing.
+
 ## 2026-11-15 — stories for places and requests, a glossary, and the brand
 
 **Affects:** content layer · intelligence layer · experience layer
