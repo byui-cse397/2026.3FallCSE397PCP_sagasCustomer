@@ -1058,10 +1058,12 @@ export const detailScore = z.object({
 export type DetailScore = z.infer<typeof detailScore>;
 
 /**
- * A claim's score: a composite of its details, its place in the graph, the
- * evidence it carries, independent support and behavior. This is the shape
- * the intelligence layer's scorer returns for each claim. Readers never see
- * the numbers. They decide what's shown first.
+ * A claim's score is its terms added up. Each term is one ingredient: its
+ * details, its place in the graph (open, see "How does a claim's place in the
+ * graph count toward its score?" in docs/DESIGN-QUESTIONS.md), the evidence it
+ * carries, independent support and behavior. This is the shape the
+ * intelligence layer's scorer returns for each claim. Readers never see the
+ * numbers. They decide what's shown first.
  */
 export const claimScore = z.object({
   claimId: z.string(),

@@ -90,6 +90,35 @@ after this phase gets its own list when we get there.
 | Task architecture | Turning a challenge into a task someone can check | Later |
 | Group mechanics | What groups do in scoring | Later |
 
+Here's more on two of those rows.
+
+**Propagation** is how support moves from one claim to another. If claim B
+extends claim A, does the support behind B make A score higher? If C then
+extends B, how much of C's support reaches A? A score draws partly on a
+claim's place in the graph, and nobody has designed that part yet. It might
+come from the depth of the paths through the claim, or from some other way of
+counting disputes against agreements. Depth of paths is fine for a first,
+simple version. That's open in `docs/DESIGN-QUESTIONS.md`, under "How does a
+claim's place in the graph count toward its score?". Two related parts are open
+there too.
+One is whether support weakens with each link it passes through, under "How do
+you tell whether a reply is about what it targets?". The other is whether
+claims that reply to a late dispute, which counts for less, carry that discount
+too, under "Does a late dispute count for less?". For propagation, "design
+only" means I'm not expecting code this phase. A written answer to those
+questions is the design. It isn't one of the MVP stories, so it comes after
+those, whether that's later this semester or next.
+
+**Task architecture** is the idea that a piece of open work is an object with
+a state, which someone can pick up and finish. Transcribing a stretch of a
+recording is one. A challenge is someone saying "not X" without saying what
+replaces it, and I decided that a challenge opens a task on the detail. That
+isn't in the contract yet, and what the task asks for is open. The rest is a
+direction in `docs/DESIGN-QUESTIONS.md`, under "Is the unit of work a task?".
+It's "Later" because nothing this phase needs it. The nearest example in the
+repository is the transcription and translation request queues, C7 and C8 in
+`apps/capture-api/BACKLOG.md`, which are open work with a state.
+
 You can split up from here and take subproblems. Tell me who has what, so I
 know who to ask.
 

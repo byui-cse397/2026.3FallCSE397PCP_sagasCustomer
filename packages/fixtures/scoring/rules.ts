@@ -1131,6 +1131,13 @@ export function runScoringRules(name: string, scorer: Scorer): void {
       // Each of these is an open design question with no rule yet. The test
       // names what a rule would check, so the question shows up in your
       // focus summary until it's answered.
+      // Prompted by: "How does a claim's place in the graph count toward its
+      // score?" in docs/DESIGN-QUESTIONS.md. Open: what the structure counts
+      // (the depth of paths is fine for a first, simple version) and how it
+      // sits with the other terms. Agreement still never counts as support.
+      it.todo(
+        "a claim's place in the graph shows up as a named term in its score",
+      );
       // Prompted by: "Should one claim hold more than one assertion?"
       // in docs/DESIGN-QUESTIONS.md.
       // Open: whether a claim with several assertions is split, and by whom.

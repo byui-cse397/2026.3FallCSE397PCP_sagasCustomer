@@ -35,6 +35,71 @@ pushing something rushed at 5:55pm.
 
 **Open one pull request per feature, and open it early as a draft.** We would rather see it at 20% and say "not that direction" than read 800 lines and ask you to start again. If a pull request takes more than about fifteen minutes to read, it is probably two.
 
+### Releases at the end of the semester
+
+The three programmes end on different days, so the releases come early, and each week brings the
+site (the hosted `apps/web`) closer to one product. Until I merge a layer's release, the site uses
+the mocks: stand-ins for the content layer's API and the intelligence layer's API, in
+`packages/mock-apis`.
+
+| When | What happens |
+| --- | --- |
+| Wednesday 2 December | Every layer opens its first release pull request, by the end of the day |
+| Wednesday 2 to Friday 4 December | Everyone reads the release pull requests and settles questions on them. The experience layer gets the site working on the mocks |
+| Friday 4 December | I merge each release pull request that runs and has no open questions |
+| Monday 7 December | The experience layer puts up the first version of the site with what I merged, and sends the content layer a guide to finding its screens on it |
+| Wednesday 9 December | Second release pull requests: fixes, and the scorer if it wasn't in the first |
+| Friday 11 December | I merge them, and the site picks them up by Monday 14 December |
+| Week of 14 December | Close-out: polish and handoff notes, nothing new |
+
+**A release is a pull request upstream with your app as it is on your fork's `main`.** Small is
+fine. [`GIT.md`](./GIT.md) ("Sending a release") shows how to send only your own folders. Here's
+what each layer sends:
+- **Content layer:** `apps/capture-api` and `apps/capture-web`.
+- **Intelligence layer:** `apps/graph-api`, with one scorer in it. If your scorer lives somewhere
+  else, move it into `apps/graph-api` on your `main` first, because the release copies from there.
+- **Experience layer:** `apps/web`, `apps/landing`, `packages/read-model` and `packages/terms`.
+
+**If your layer has an API, put an `ENDPOINTS.md` in its folder** (`apps/capture-api` or
+`apps/graph-api`). List each route: the method and path, what it takes, what it returns (the type's
+name in `packages/contracts/src/model.ts`, where there is one), and whether it works yet. The
+routes in `packages/mock-apis/README.md` are the target. If one of yours differs, list the
+difference. The experience layer adapts to it when it integrates, so you don't need to rename
+anything.
+
+**The release pull requests are where we work things out together.** Read the other layers'
+releases, and ask about anything unclear on the pull request itself, tagging the people who opened
+it and me. I review them with you between Wednesday and Friday, and merge each one once it runs and
+we've settled its questions. The experience layer can try a release's branch before I merge it.
+
+**For the content layer, the site is a stretch goal.** If your release pull request is open by the
+end of Wednesday 2 December, your screens can be on the site for your presentation. If it isn't,
+your project still stands on its own, the same as it does now. In the week of 7 December your own
+work comes first: polish, your presentation, and answering the experience layer's integration
+requests. Your fixes go in the second release.
+
+**For the intelligence layer, the scorer on the site is a stretch goal too.** Send it with the first
+release if you can, or with the second on Wednesday 9 December.
+
+**The week of 14 December is close-out.** Nothing new goes on the site. Each team finishes its
+handoff note (H1), and the experience layer fixes what's broken until the end of its semester.
+
+**The mocks are the fallback.** Once I merge a layer's release, the site points at that layer's
+real API, and keeps the mock so it can switch back if the real API has a problem. The experience
+layer makes that switch, on purpose. It's a setting, never automatic, so nobody reading the site
+sees invented places as if they were real ones. `packages/mock-apis/README.md` says how.
+
+**A release never changes `packages/contracts` or `packages/fixtures`.** If you need a change there,
+send it as its own pull request.
+
+**Your own layer's work comes first.** It's what your course grades you on. Answer quick questions
+from another layer within a day, by replying where they tagged you. If a request would take real
+work, say so and tag me, and I'll decide whether it's worth doing this semester. Until then, the
+team that asked keeps going on the mocks.
+
+For the experience layer, integration is your own work, and the mocks come first. Build each
+integration against the mock, so that moving to the real API only changes an address, and ask
+another team only where its release behaves differently from the mock.
 
 ### When the contract changes
 

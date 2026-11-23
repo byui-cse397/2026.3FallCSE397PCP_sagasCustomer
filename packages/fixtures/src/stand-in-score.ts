@@ -83,7 +83,8 @@ export function standInScore(i: StandInInputs): ClaimScore {
     if (readable) {
       dTerms.push(t('content', 'extensions', 0.75 * extensions.length), t('content', 'disputes', -0.5 * disputes.length));
     }
-    const score = Math.max(0.25, dTerms.reduce((sum, x) => sum + x.value, 0));
+    // A score is its terms added up, with no floor, so a reader of the terms can check it.
+    const score = dTerms.reduce((sum, x) => sum + x.value, 0);
     const claimIds = [...disputes, ...extensions].map((e) => e.id);
     return {
       detailId: d.id, excerpt: d.excerpt, score, terms: dTerms, contested: disputes.length > 0, claimIds,
@@ -91,7 +92,7 @@ export function standInScore(i: StandInInputs): ClaimScore {
     };
   });
 
-  const score = Math.max(0.25, terms.reduce((sum, x) => sum + x.value, 0));
+  const score = terms.reduce((sum, x) => sum + x.value, 0);
   return { claimId: i.claim.id, score, terms, details };
 }
 

@@ -1,0 +1,36 @@
+{
+  "name": "@sagas/mock-apis",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./capture": "./src/capture.ts",
+    "./graph": "./src/graph.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo node_modules",
+    "serve:capture": "tsx src/serve.ts capture",
+    "serve:graph": "tsx src/serve.ts graph",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@sagas/contracts": "workspace:*",
+    "@sagas/fixtures": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@sagas/eslint-config": "workspace:*",
+    "@sagas/prettier-config": "workspace:*",
+    "@sagas/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "prettier": "@sagas/prettier-config"
+}

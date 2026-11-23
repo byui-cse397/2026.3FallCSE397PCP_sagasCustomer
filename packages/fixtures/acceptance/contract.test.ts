@@ -132,6 +132,18 @@ describe('acceptance criteria point at data that exhibits them', () => {
     }
   });
 
+  it('every score is its terms added up (contract 2.7.2)', () => {
+    const total = (terms: { value: number }[]) => terms.reduce((s, t) => s + t.value, 0);
+    for (const state of states) {
+      for (const c of state.claims) {
+        expect(c.score.score, `${c.claim.id}`).toBeCloseTo(total(c.score.terms), 9);
+        for (const d of c.score.details) {
+          expect(d.score, `${c.claim.id} ${d.detailId}`).toBeCloseTo(total(d.terms), 9);
+        }
+      }
+    }
+  });
+
   it('standing is counts only, never a score', () => {
     // Guards the rule rather than the numbers: if somebody adds a field to
     // standing that is a rating rather than a tally, this fails.

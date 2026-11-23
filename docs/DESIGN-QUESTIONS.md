@@ -55,28 +55,29 @@ and the shared contract.
 | 22 | Should a contributor see why their claim ranks where it does? | Experience |
 | 23 | Can standing be inherited through vouching? | Intelligence |
 | 24 | Does a late dispute count for less? | Intelligence |
-| 25 | Is the unit of work a task? | Intelligence |
-| 26 | What makes a place significant? | Experience |
-| 27 | A person named in a claim versus a person with a profile | Intelligence |
-| 28 | What happens when one detail turns out to be two people? | Intelligence |
-| 29 | Which text does an excerpt count into? | Intelligence |
-| 30 | How do you tell whether a reply is about what it targets? | Intelligence |
-| 31 | Can a passover point at one detail? | Intelligence |
-| 32 | What happens to a supporting record that stops holding up? | Content |
-| 33 | How are machine-made drafts treated? | Content |
-| 34 | Is every ask in the system one kind of object? | Experience |
-| 35 | Is there a state between visible and hidden? | Intelligence |
-| 36 | Where does a record's weight as evidence live? | Intelligence |
-| 37 | Can someone dispute that two records are independent? | Intelligence |
-| 38 | Can a record be closed until a date? | Content |
-| 39 | How does someone reach a contributor without knowing who they are? | Content |
-| 40 | Do all disagreements matter equally? | Intelligence |
-| 41 | What should happen when someone repeats what's already here? | Intelligence, experience |
-| 42 | Who decides what a place is called? | Not for this project |
-| 43 | Naming people who can't answer | Not for this project |
-| 44 | Is this built for the community, or for people outside it? | Not for this project |
-| 45 | Should all of it be public? | Not for this project |
-| 46 | What should a disagreement look like to the people in it? | Not for this project |
+| 25 | How does a claim's place in the graph count toward its score? | Intelligence |
+| 26 | Is the unit of work a task? | Intelligence |
+| 27 | What makes a place significant? | Experience |
+| 28 | A person named in a claim versus a person with a profile | Intelligence |
+| 29 | What happens when one detail turns out to be two people? | Intelligence |
+| 30 | Which text does an excerpt count into? | Intelligence |
+| 31 | How do you tell whether a reply is about what it targets? | Intelligence |
+| 32 | Can a passover point at one detail? | Intelligence |
+| 33 | What happens to a supporting record that stops holding up? | Content |
+| 34 | How are machine-made drafts treated? | Content |
+| 35 | Is every ask in the system one kind of object? | Experience |
+| 36 | Is there a state between visible and hidden? | Intelligence |
+| 37 | Where does a record's weight as evidence live? | Intelligence |
+| 38 | Can someone dispute that two records are independent? | Intelligence |
+| 39 | Can a record be closed until a date? | Content |
+| 40 | How does someone reach a contributor without knowing who they are? | Content |
+| 41 | Do all disagreements matter equally? | Intelligence |
+| 42 | What should happen when someone repeats what's already here? | Intelligence, experience |
+| 43 | Who decides what a place is called? | Not for this project |
+| 44 | Naming people who can't answer | Not for this project |
+| 45 | Is this built for the community, or for people outside it? | Not for this project |
+| 46 | Should all of it be public? | Not for this project |
+| 47 | What should a disagreement look like to the people in it? | Not for this project |
 
 ---
 
@@ -710,6 +711,26 @@ Open:
   is a question about arithmetic.
 - Cold start. With few contributors, one person's burst of activity closes a
   period. That is fragile exactly when the archive is thinnest.
+
+## How does a claim's place in the graph count toward its score?
+
+Part of a claim's score comes from where it sits in the graph: what replies to
+it, what replies to those, and how the disputes and extensions around it
+balance out. Nobody has designed that part yet.
+
+Counting the depth of the paths through a claim is fine for a first, simple
+version. It may not be where this ends, because depth on its own doesn't tell a
+long chain of agreement from a long argument.
+
+Open:
+
+- What the structure counts: the depth of paths, the balance of disputes
+  against extensions around the claim, or something else.
+- Whether support weakens with each link it passes through. That overlaps "How
+  do you tell whether a reply is about what it targets?".
+- How it sits with the other terms. Agreement adds almost nothing and never
+  counts as support, so a claim can't gain weight from its place in the graph
+  just because many people agreed near it.
 
 ## Is the unit of work a task?
 
