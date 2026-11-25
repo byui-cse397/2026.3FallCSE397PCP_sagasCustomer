@@ -53,7 +53,8 @@ contract change does.
 **It takes weeks.** Open a pull request, we review it, it lands on a
 Sunday, and the other teams pull it when they decide to at a check-in. Two to
 three weeks from idea to it being in somebody else's build is normal, and it is
-the cost of nobody's work moving under them mid-sprint. If you know in week four that you will need something in week nine,
+the cost of nobody's work moving under them mid-sprint. The releases at the end of the semester
+don't wait for a Sunday (see "Sending a release"). If you know in week four that you will need something in week nine,
 raise it in week four.
 
 **Nobody is ever blocked waiting for it.** That is what the fixtures are for.
@@ -79,7 +80,8 @@ That is what a check-in is reviewing, and it is what you are graded on.
 
 **A contribution upstream is separate and rare.** It is something small with a
 reason behind it, such as a contract change, a fixture gap you closed, or a
-correction to these docs. Expect a handful across a semester.
+correction to these docs. Expect a handful across a semester. The releases at the
+end of the semester are the exception, and "Sending a release" below covers them.
 
 If you find yourself cherry-picking commits into a pull request against upstream
 so that somebody can look at your week's work, stop. That is the first kind of
@@ -109,6 +111,7 @@ worth ten minutes.
 | Another layer's app | **No.** You will never need to. | Raise it at a check-in. |
 | `packages/contracts` | **No.** | Pull request upstream, raised at a check-in first. |
 | `packages/fixtures` | **No.** | Pull request upstream. Closing a known gap is welcome. |
+| `packages/mock-apis` | **No.** | Pull request upstream. It stands in for two layers, so changes go through the sponsor. |
 | `docs/`, `README.md`, `SETUP.md` | Corrections, yes | Pull request upstream. A setup problem you hit is likely to hit everyone. |
 | `tooling/`, root `package.json`, `docker-compose.yml` | Yes, but it costs you | Pull request upstream, or carry the conflict on every pull. |
 
@@ -249,6 +252,48 @@ to read, it is probably two pull requests.
 more than the diff. "A translator pointed out that dialect cannot be recovered
 from text after the fact, so it has to be captured at contribution time" tells us
 something the diff never will.
+
+## Sending a release
+
+A release is the only pull request that sends a whole app upstream.
+[`WORKING-TOGETHER.md`](./WORKING-TOGETHER.md) has the dates and what goes in
+each one.
+
+A pull request straight from your `main` would carry every change you've made
+outside your own folders. So start a branch from upstream's `main` instead, and
+copy only your folders onto it. First bring your own `main` up to date with
+upstream and push it, so the release has your latest work and doesn't undo any
+of upstream's. "Pulling upstream forward" above covers the merge, including
+what to do if it conflicts.
+
+```bash
+git checkout main
+git pull origin main
+git fetch upstream
+git merge upstream/main
+git push origin main
+git checkout -b release-1 upstream/main
+git rm -r -q --ignore-unmatch apps/capture-api apps/capture-web
+git checkout main -- apps/capture-api apps/capture-web
+pnpm install
+git add apps packages pnpm-lock.yaml
+git commit -m "Release 1: content layer"
+git push origin release-1
+```
+
+Put your own layer's folders on the `git rm` line and the `git checkout main --`
+line, and your layer in the commit message. The `git rm` line clears upstream's
+copy of your folders first, so a file you deleted doesn't come back. `pnpm
+install` updates `pnpm-lock.yaml` for your dependencies, which is the one file
+outside your folders that belongs in a release.
+
+Before you open the pull request, start your app from that branch once. If it
+needs a change outside your folders, say so in the description rather than
+including it, and we'll sort it out together. Then open the pull request on
+GitHub with these four settings: base repository `Civum/sagas`, base `main`,
+head repository your fork, and compare `release-1`.
+
+The second release works the same way, from a fresh branch called `release-2`.
 
 ---
 

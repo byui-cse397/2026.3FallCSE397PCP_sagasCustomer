@@ -25,17 +25,18 @@
  * A design. Grey text on white with system fonts is a placeholder and the
  * visual identity is your deliverable. Replace all of it.
  *
- * The map. `MapView` is a stub. Integrating Mapbox is the centrepiece of this
- * layer and doing it for you would take the most interesting work in the scope.
+ * The map and searchable list share site summaries, with the list available
+ * alongside the map and when no Mapbox token is configured.
  */
 
-import Link from 'next/link';
 import { DEFAULT_SITE, getSiteState, listSites } from '@sagas/read-model';
 import { ArticleView } from '@/features/article/ArticleView';
-import { MapView } from '@/features/map/MapView';
+import { MapView, summariseSite } from '@/features/map/MapView';
 
 export default function Page() {
-  const sites = listSites();
+  const sites = listSites().map((site) =>
+    summariseSite(site, getSiteState(site.slug, 't3').integrity),
+  );
   const state = getSiteState(DEFAULT_SITE, 't3');
 
   return (
@@ -61,14 +62,6 @@ export default function Page() {
       </section>
 
       <ArticleView state={state} />
-
-      <footer className="border-t border-neutral-200 pt-5 text-xs text-neutral-600">
-        <Link href="/dev" className="underline">
-          /dev
-        </Link>{' '}
-        renders these components against all four fixture states with the
-        acceptance cases for each.
-      </footer>
     </div>
   );
 }

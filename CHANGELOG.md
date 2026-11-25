@@ -41,6 +41,81 @@ it. This is the most useful field in the entry.
 
 ---
 
+## 2026-11-22 — releases, mock APIs, and an open question about the graph
+
+**Affects:** all three layers
+
+**What:** `docs/WORKING-TOGETHER.md` has a new section, "Releases at the end of the semester", with
+the dates and what each layer sends, and `docs/GIT.md` has "Sending a release". A new package,
+`packages/mock-apis`, stands in for the content layer's API and the intelligence layer's API until
+their releases are merged. `docs/DESIGN-QUESTIONS.md` has a new open question, "How does a claim's
+place in the graph count toward its score?", with a placeholder in the scoring rules. The
+`capture-web` and `capture-api` READMEs say who brings the contributing screens into the site and
+who builds the upload links.
+
+**Why:** the three semesters end on different days, so the layers come together early, and no
+layer has to wait for another's release to work against its routes.
+
+**You need to:**
+- *content layer* — read the release section. Your first release is a pull request by the end of
+  Wednesday 2 December.
+- *intelligence layer* — the same, and the new open question is yours.
+- *experience layer* — the same. Your backlog has the stories for mounting the mocks.
+
+## v2.7.2 — 2026-11-22
+
+**Affects:** intelligence layer, experience layer
+
+**What:** the comment on `claimScore` in `model.ts` now says a claim's score is its terms added up,
+and points at the open question about the graph. The fixtures' stand-in scorer no longer raises a
+total below 0.25 to 0.25. No fixture value changes, because no total was that low. The shape
+doesn't change.
+
+**Why:** a score you can check by adding up its terms is easier to explain and to trust, and the
+glossary in `apps/graph-api/BACKLOG.md` already said so.
+
+**You need to:**
+- *intelligence layer* — make your scorer's `score` the sum of its `terms`, if it isn't already.
+- *experience layer* — nothing.
+- *content layer* — nothing.
+
+## 2026-11-15 — stories for places and requests, a glossary, and the brand
+
+**Affects:** content layer · intelligence layer · experience layer
+
+**What:**
+- `apps/capture-api/BACKLOG.md` gains C11 to C14 (dropping a pin to create a place, finding a
+  place or adding it, the sites API, and adding records to a place) and C7 to C10 (queues of
+  transcription and translation requests, a screen for working a request, and processing uploads
+  in the background).
+- `apps/graph-api/BACKLOG.md` gains a glossary of the project's words in plain English, and S16,
+  a test that the example graphs are valid.
+- `packages/brand/` holds the Sagas logo, colours and favicons, with a README on using them.
+
+**Why:** each layer needed its next work written down plainly, and the teams asked for a logo,
+colours and a font.
+
+**You need to:** nothing yet. Pull upstream when you start a new story, and use
+`packages/brand/` wherever you show the name.
+
+## v2.7.1 — 2026-11-15
+
+**Affects:** content layer
+
+**What:** the comment on `collection` in `model.ts` said a collection is the records one profile
+handed over together. That was wrong. A collection is a profile's records, kept together so every
+record can say where it came from. The shape doesn't change. The comment now also says what's
+coming and isn't in the contract yet: one collection per profile, copies marked as copies, and
+links between related media.
+
+**Why:** the old comment described the model wrongly, and the code is what you build from.
+
+**You need to:**
+- *content layer* — nothing now. If your code treats a collection as one upload session, keep it
+  working for now, and don't build further on that idea.
+- *intelligence layer* — nothing.
+- *experience layer* — nothing.
+
 ## v2.7.0 — 2026-11-05
 
 **Affects:** experience layer
@@ -61,6 +136,60 @@ model doesn't. The sponsor decided this on 5 November.
   moves the read model to answering by time.
 - *intelligence layer* — nothing. The scoring graph already uses `asOf`.
 - *content layer* — nothing.
+
+## 2026-11-12 — a handoff story for every layer
+
+**Affects:** content layer · intelligence layer · experience layer
+
+**What:** each layer's backlog gains H1, a handoff note in your app's folder: what you finished,
+what you started and where it stopped, what nobody started, how to run it, and anything the next
+team should know.
+
+**Why:** whoever picks up your work in spring starts from your note instead of from scratch.
+
+**You need to:** nothing yet. It's for the end of the semester.
+
+## 2026-11-09 — terms `provisional-0.2`
+
+**Affects:** content layer · experience layer
+
+**What:** `docs/TERMS.md` is now version `provisional-0.2`. "What we keep about you" says that
+if someone marks contributions as they read ("sounds right", "don't know" or "don't care"), Sagas
+keeps those choices with their profile, to suggest what to show them next.
+
+**Why:** passovers are kept with a profile, and the terms didn't say so.
+
+**You need to:**
+- *content layer* — show `provisional-0.2` where your terms screen shows a version, and store it
+  as `termsVersion` on new records. Records made under `provisional-0.1` keep that version.
+- *experience layer* — nothing beyond your terms page (De12) showing the current file.
+
+## 2026-11-08 — stories for the minimum scorer
+
+**Affects:** intelligence layer
+
+**What:** `apps/graph-api/BACKLOG.md` gains a table of the eight things the scorer does this
+semester, the stories for each and where each stands, and six new stories: S10 stores claims, S11 is a plain screen for writing
+them, S12 explains a score, S13 runs on the examples and the first real place, S14 scores live
+with `POST /score`, and S15 lets the experience layer call the scorer.
+
+**Why:** the minimum scorer was a list in an email. As stories, each of you can pick one and see
+what done looks like.
+
+**You need to:** nothing before Monday. We'll go through them together at the meeting.
+
+## 2026-11-08 — neighbourhood boundaries
+
+**Affects:** experience layer · content layer
+
+**What:** `packages/fixtures/geo/` holds the city's neighbourhood boundaries as GeoJSON, with a
+README saying where they come from, how to credit them, and how to refresh them. Every fixture
+site falls inside one of them.
+
+**Why:** the map's shapes (M6) need them, and so does anything that places a point within a
+neighbourhood. Keeping one copy upstream means every team works from the same boundaries.
+
+**You need to:** nothing yet. Pull upstream when a story needs the boundaries.
 
 ## 2026-11-05 — stories for references and the terms screen, and two placeholder rules
 

@@ -146,17 +146,24 @@ pins, and a list view that has everything the map has.
 **Done when:** see B1 and B3 below. Both have to work, with and without a
 Mapbox token.
 
-### M2 · Search by name and by map area
+### M2 · Search by name and by map area (Sam)
 
 **Workstream:** Map and discovery. **Status:** Later. Needs M1.
 
 **Goal.** Somebody can find a site by typing part of its name, or by moving the
 map.
 
-**Done when:** a search field filters sites by name, other names and address,
-and the list follows the area the map shows. It works from the keyboard.
+**Done when:** a search field filters sites by name and other names, and the
+list follows the area the map shows. It works from the keyboard.
 
-### M3 · Site icons
+**Never search by address** (changed 18 November). This story used to say
+"and address", which was wrong. Matching on an address would tell anyone who
+types a street address that a place sits there, and some of these places are
+homes. For the same reason, don't show a site's address on the map, the list or
+a place's page, and show the neighbourhood instead (M8). The `address` field is
+still in the contract until a coming change deals with it.
+
+### M3 · Site icons (Sam)
 
 **Workstream:** Map and discovery, with Design. **Status:** Ready. Expanded 12 November.
 
@@ -319,34 +326,38 @@ page says what's new, with the copy approved the same way as before.
 
 ### P6 · An address for the full app (Ema)
 
-**Workstream:** Platform. **Status:** Ready to propose. Setting it up waits
-for P7.
+**Workstream:** Platform. **Status:** Ready. Decided 22 November.
 
-**Goal.** The full app needs its own address next to the landing page, such
-as a subdomain. Propose one, and say what it needs in DNS and from the hosting
-chosen in P4.
+**Goal.** The sponsor chose the addresses. Your fork publishes the app to
+`test.sagasproject.org`, the preview, with fixture data only. `app.sagasproject.org`, the public
+site, deploys from upstream (P12). The landing page stays at `sagasproject.org`.
 
-**Done when** the sponsor has agreed the address and the app answers on it.
-The Cloudflare token can't change DNS, so ask in the questions issue for the
-DNS change.
+**Done when** the app answers on `test.sagasproject.org`. Your Cloudflare token can't change the
+domain, so once the app runs from your fork on its `workers.dev` address, tag the sponsor in the
+questions issue and he attaches the subdomain to your Worker.
 
 ### P7 · Publish the full app, and decide on staging
 
 **Workstream:** Platform. **Status:** Later. Needs the sponsor's agreement on
 P4.
 
-**Goal.** Publish `apps/web` from the pipeline to a preview address that
-search engines skip, using fixture data only. Decide along the way whether the
-project needs a staging environment (a second copy for checking changes before
-they reach the preview), or whether publishing every merge to main is enough.
-The sponsor's lean is that main is enough if it works.
+**Goal.** Publish `apps/web` from the pipeline to `test.sagasproject.org` (P6),
+which search engines skip, using fixture data only. The staging question is
+answered (sponsor, 22 November): your fork's deployment is the staging copy, and
+the public site deploys from upstream (P12).
 
-**Done when** merges publish the app the way the decision says, the decision
-and its reason are in a one-page decision record, and the README says how to
-roll back. Publishing can run from GitHub Actions on every merge, or one
+**Done when** merges publish the app to `test.sagasproject.org`, and the
+README says how to roll back. Publishing can run from GitHub Actions on every merge, or one
 person can manage releases for everyone. Either is fine.
 
-### P8 · Keep the hosted database awake
+**The Mapbox token** (added 19 November). The published map uses a Mapbox
+token from one of you. Give it to the build as a GitHub Actions setting and
+never commit it. Anything named `NEXT_PUBLIC_` ends up in the page anyone can
+load, so use a public token with no secret scopes, and limit it to
+`test.sagasproject.org` if Mapbox lets you. When the work moves upstream, the sponsor puts his
+own token there, and you keep using yours.
+
+### P8 · Keep the hosted database awake (Ema)
 
 **Workstream:** Platform. **Status:** Ready once you have database access.
 
@@ -361,6 +372,125 @@ what it does and how to turn it off.
 
 **Not in this story.** Anything else to do with keeping the database up, like backups or
 monitoring.
+
+### P9 · Bring the contributing screens into the site
+
+**Workstream:** Platform. **Status:** Ready once the content layer's release pull request is open
+(Wednesday 2 December). Added 18 November.
+
+**Goal.** The live site is one app, so the content layer's screens for handing something over
+(`apps/capture-web`, React with Vite and `react-router`) need to open inside `apps/web`. The
+quick way leaves their folder where it is. `apps/capture-web` is already a workspace package,
+`@sagas/capture-web`, so the site imports their app and shows it on one page. The content layer
+keeps working in their folder as usual, and can still run it on its own with Vite.
+
+**How to do it:**
+- Add `@sagas/capture-web` to `apps/web`'s dependencies (`workspace:*`), and list it in
+  `transpilePackages` in the Next.js config so Next.js compiles it.
+- Add one catch-all page, `src/app/contribute/[[...path]]/page.tsx`, marked `'use client'`, that
+  renders their `App` inside a `BrowserRouter` with `basename="/contribute"`. Their own routes
+  then work underneath it, like `/contribute/sites/...`.
+- Their `src/index.ts` exports nothing yet, and adding `App` to it is yours (sponsor, 22 November).
+  Suggest the one-line export on their release pull request, so they see it and agree, rather than
+  asking them to do it.
+- Check two things as you go: their `globals.css`, which can clash with the site's styles, and any
+  Vite settings their code reads (`import.meta.env.VITE_…`), which become Next.js settings
+  (`process.env.NEXT_PUBLIC_…`).
+
+**Done when:**
+- The contributing screens open under `/contribute` in `apps/web`, work the way they do in
+  `apps/capture-web`, and use the brand like the rest of the site.
+- They call the content layer's API through `SAGAS_CAPTURE_API` (Da12), which points at the mock
+  until the sponsor merges their release.
+- The site builds and deploys with them, and `apps/capture-web` doesn't need hosting of its own.
+
+**Not in this story.** Moving or rewriting their screens, or turning each of their routes into a
+Next.js page of its own, which can come later. Hosting the content layer's API, which is P10's
+question. Combining creating a place and reading it into one flow. For now there are two
+screens: theirs for creating a place and handing over a record, and yours for reading. Their place
+screens overlap your map and place page, so bringing the two together would be better, and it's
+an open stretch goal for both teams (sponsor, 19 November).
+
+### P10 · Find out whether the two Express APIs run on Workers Free
+
+**Workstream:** Platform. **Status:** Ready. Added 18 November.
+
+**Goal.** The content layer's `capture-api` and the intelligence layer's `graph-api` are both
+Express 5 apps, written for an ordinary Node server. You'll host both on Cloudflare with
+everything else, and whether Express runs on Workers Free as it is decides whether that's a
+small deploy or a rewrite. Find out before either team is finished, so there's time to adjust.
+
+**Done when** a short write-up on #34 answers:
+- Does an Express 5 app run on Workers Free, and what does it need (a compatibility setting, an
+  adapter, changes to the code)? Link the Cloudflare page that says so.
+- Does the Postgres connection go through Hyperdrive, the same as the full app's?
+- Does one small request fit inside the free plan's CPU limit?
+- If Express doesn't run, what's the smallest change that gets each API hosted?
+
+A tiny Express app with one route, deployed to a test Worker and removed afterwards, is the
+clearest proof, using the same conditions as P4: the `workers.dev` address only and fixture data
+only.
+
+**Not in this story.** Hosting either API for real. Changing either team's code.
+
+### P11 · A guide to the content layer's screens on the live site
+
+**Workstream:** Platform. **Status:** Later. Needs P9 and P7. Added 22 November.
+
+**Goal.** The content layer presents their work in the week of 7 December, and they may want to show
+it on the live site. They haven't seen the site, so they need a short guide to finding their screens
+on it.
+
+**Done when:**
+- A one-page guide says where the live site is, how to reach the contributing screens from the home
+  page, and what each of their screens looks like inside the site, with a screenshot of each.
+- It says which parts use the mocks and which use their real API, so nothing they show is a surprise.
+- It goes to the content layer, in an issue upstream tagging them and the sponsor, with the site on
+  Monday 7 December.
+
+**Not in this story.** Changing their screens. A guide to the rest of the site.
+
+### P12 · Deploy the landing page and the app from upstream
+
+**Workstream:** Platform. **Status:** Later. Needs P7. Added 22 November.
+
+**Goal.** Your fork belongs to your course and its deploy key ends with the semester, so the public
+site has to deploy from `Civum/sagas` before you finish. Your fork keeps deploying
+`test.sagasproject.org` until then.
+
+**Done when:**
+- The deploy workflows for the landing page and the app go upstream in the second release (Wednesday
+  9 December), with the secrets they need listed by name, never by value.
+- The sponsor adds those secrets and a production deploy key upstream, and the first deploy from
+  `Civum/sagas` puts `sagasproject.org` and `app.sagasproject.org` up in the week of 14 December.
+- When the first deploy from upstream runs, tag the sponsor on the pull request or #34, and he
+  attaches `app.sagasproject.org` to the Worker in the dashboard.
+- Your H1 handoff note says how to deploy from upstream and how to roll back.
+
+**Not in this story.** Real records on the site. Changing either site's code.
+
+### P13 · Upload links for files, on the test bucket (Ema)
+
+**Workstream:** Platform. **Status:** Ready. Added 22 November.
+
+**Goal.** Records with audio, photos or video need somewhere to keep the files. The design is in
+`apps/capture-api/README.md` ("Storage"): the browser uploads straight to storage through a short-
+lived upload link, and the server never handles the bytes. Building those links is now part of
+your integration work (sponsor, 22 November). The storage is Cloudflare R2, which speaks the same
+S3 API the code already uses, so the `S3_` settings in `.env.example` work with it.
+
+**Done when:**
+- The site can ask for an upload link, upload a file through it, and read the file back through a
+  short-lived read link, against the bucket `sagas-media-test`, from localhost and from
+  `test.sagasproject.org`.
+- The keys come from settings (`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
+  `S3_SECRET_ACCESS_KEY`, and `S3_REGION` set to `auto`), never committed. The sponsor sent Ema a key
+  limited to the test bucket.
+- Nothing stores a link. Store the file's key, and make a fresh link each time someone reads it.
+- Once you've tried it, the README says whether R2 needs `S3_FORCE_PATH_STYLE` true or false.
+
+**Not in this story.** Real records: the production bucket, `sagas-media`, is the sponsor's.
+Processing files after upload. The content layer's own upload screens, beyond what P9 brings in.
 
 ### Da8 · A schema for what the site saves
 
@@ -559,7 +689,7 @@ questions issue.
 
 ### De12 · Show the terms (Michael)
 
-**Workstream:** Design. **Status:** Draft.
+**Workstream:** Design. **Status:** Draft. The web-app page is implemented; the landing-page link is a follow-up pending a sponsor request and approval in [#11](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/issues/11).
 
 **Goal.** Anyone can read the terms before they hand anything over. The landing page and the
 full app both lead to them.
@@ -567,6 +697,9 @@ full app both lead to them.
 **Done when:**
 - A page shows `docs/TERMS.md`, read from that file so the two can't drift apart.
 - The landing page and the full app both link to it.
+- Every page of the full app has a footer that links to the terms, so anyone who types into the site
+  or hands something over can find them (sponsor, 19 November). That includes the contributing
+  screens once P9 brings them in.
 
 **Not in this story.** Accepting the terms, which is on the capture screen. The wording,
 which is the sponsor's.
@@ -624,8 +757,8 @@ Some of these use the freight depot, which came with contract 2.4.0. Your fork h
 
 ### M6 · Neighbourhood shapes on the map
 
-**Workstream:** Map and discovery. **Status:** Later. Needs M1, and the
-boundary data, which the sponsor will provide.
+**Workstream:** Map and discovery. **Status:** Ready. Needs M1. The boundary
+data is in `packages/fixtures/geo/`.
 
 **Goal.** Places sit inside neighbourhood shapes on the map. The sponsor has
 decided that a home is shown at neighbourhood or subdivision level until the people it
@@ -637,8 +770,34 @@ on the map itself, each fixture site falls inside the shape whose boundary
 contains its coordinates, and it works on a phone and with or without a
 Mapbox token, like M1.
 
-**Not in this story.** Moving a home's pin to its neighbourhood. The contract
-doesn't mark a place as a home yet, and that gets its own story once it does.
+**Not in this story.** Moving a place's pin into its neighbourhood, which is
+M8. The boundary data is in `packages/fixtures/geo/`.
+
+### M8 · Show each place inside its neighbourhood
+
+**Workstream:** Map and discovery. **Status:** Ready. Added 18 November. Goes
+with M6 and De11.
+
+**Goal.** For now, the map never puts a pin on a place's real coordinates. It
+shows each place inside the neighbourhood it's in, with the places in one
+neighbourhood spaced evenly inside its shape. A reader learns the neighbourhood
+and nothing more precise. This is a stopgap I've chosen so you aren't waiting on
+anyone. Later the content layer may give each place a safe area to draw
+instead, and we'll decide then whether the map draws from that.
+
+**Done when:**
+- Each pin sits inside its place's neighbourhood, at a spot worked out from the
+  neighbourhood's shape and the places in it, never from the place's own
+  coordinates. How you space them is your choice.
+- A pin sits in the same spot every time the map loads. A random offset would
+  give the real spot away to anyone who loads the map enough times.
+- Zooming in shows nothing more precise.
+- The list and a place's page name the neighbourhood, never an address.
+- If a place falls outside every neighbourhood, tell me rather than guess.
+
+**Not in this story.** Showing a public place, like a park or a library, at its
+exact spot. The contract doesn't say which places are public yet. Drawing from
+an area the content layer supplies.
 
 ### Da9 · Neighbourhood shapes in the read model
 
@@ -652,7 +811,7 @@ of its own.
 **Done when** M6 draws from it, and every fixture site comes back with the
 neighbourhood whose boundary contains its coordinates.
 
-### De11 · How the map shows neighbourhoods, and a home inside one
+### De11 · How the map shows neighbourhoods, and a home inside one (Michael)
 
 **Workstream:** Design. **Status:** Ready.
 
@@ -785,10 +944,10 @@ its links, and choosing one opens D2's screen.
 
 **Not in this story.** A graph of a whole site, or of everything.
 
-### De13 · Colour and type from the brand
+### De13 · Colour and type from the brand (Michael)
 
-**Workstream:** Design. **Status:** Later. Needs the sponsor's logo, colours and font, which he's
-making.
+**Workstream:** Design. **Status:** Ready. Sponsor assets are available in
+`packages/brand/`; the design record is `apps/web/DE13-BRAND-DESIGN.md`.
 
 **Goal.** The site and the map stop being grey. The landing page, the app and the map share the
 brand's colours and type, through your design tokens, so a change happens in one place.
@@ -966,7 +1125,7 @@ components.
 `[longitude, latitude]`. Each person registers their own free token, and nobody
 commits one.
 
-### B2 · Search bar that finds an address and drops a pin
+### B2 · Search bar that finds an address and drops a pin (Sam)
 
 **Status:** Later. Needs B1.
 
@@ -979,6 +1138,10 @@ commits one.
 - The fixture sites in view stay visible as pins after the search, so a site
   near the result is one click away.
 - It works from the keyboard and with a screen reader.
+- The search only moves the map. It never looks a site up by its address or its
+  stored location, so the sites you see afterwards are the pins the map already
+  shows (sponsor, 19 November). A search that matched a site's real location
+  would let anyone try homes one at a time until one turned out to be a site.
 
 **Part of the story:** find out which Mapbox service does address search, what
 its free allowance is, and whether results may be stored. Write down what you
@@ -997,8 +1160,10 @@ is not part of this layer's work.
 
 - A list view shows every site the map shows, and it is reachable whether or not
   a Mapbox token is set. `MapUnavailable` is where it starts.
-- A search field filters the list by site name, other names (`aka`) and address.
-  This searches the fixture data, so it works with no Mapbox token.
+- A search field filters the list by site name and other names (`aka`). This
+  searches the fixture data, so it works with no Mapbox token. It never matches
+  on an address, and the list doesn't show one. M2 says why (changed 18
+  November).
 - Each entry says in words how well documented the place is.
 
 ### B4 · Only load the sites in view
@@ -1150,6 +1315,28 @@ holding one snapshot per moment.
 **Not in this story.** Contributions from the other layers. They arrive with integration, in
 the same shape.
 
+### Da12 · Mount the shared mocks
+
+**Workstream:** Data. **Status:** Ready. Added 18 November, rewritten 22 November.
+
+**Goal.** Your pages shouldn't wait on another layer. Upstream now has `packages/mock-apis`:
+stand-ins for the content layer's API and the intelligence layer's API, on the routes upstream
+names, built from the fixtures. Mount them in the site, so every call to another layer goes
+through an address you can switch from the mock to the real API when that layer's release is
+merged. `packages/mock-apis/README.md` has the few lines it takes.
+
+**Done when:**
+- `apps/web` mounts both mocks at `/api/mock/capture` and `/api/mock/graph`, as the README shows.
+- The site reads each API's address from a setting, `SAGAS_CAPTURE_API` and `SAGAS_GRAPH_API`,
+  pointing at the mocks by default.
+- Switching to a real API, or back to the mock, is a change to that setting, made on purpose. It's
+  never automatic, so nobody reading the site sees invented places as if they were real ones.
+- If the site needs something neither mock has, mock it in your own code in the shape `model.ts`
+  gives it, and open an issue upstream tagging me, so it can go into the shared mocks.
+
+**Not in this story.** Changing `packages/mock-apis`, `packages/fixtures` or `packages/contracts`.
+Those go upstream.
+
 ### D2 · Explore a place one claim at a time
 
 **Workstream:** Design, with Data. **Status:** Ready. It's a stretch goal, and your statement of
@@ -1223,3 +1410,32 @@ layer's matching, which plugs in later as one more input.
 How claims, records and renderings cite each other on the page, and how
 somebody links to one claim. See `apps/web/DIRECTION.md`. Stories get written
 once C1 and C3 exist.
+
+### E1 · Mark the references in a claim's text
+
+**Workstream:** Design. **Status:** Ready. Added 19 November.
+
+**Goal.** A claim can mark words in its text as a reference: a date, a place, a person or a
+record (`claimReference` in `model.ts`). Wherever the site shows a claim's text, a reader should
+see which words are references.
+
+**The picture so far** (sponsor, 19 November):
+- Underline each reference in its kind's colour, and put a small magnifying glass at its upper
+  right. Colour isn't the only cue, so the kind also shows as a label or icon, the way D2
+  describes.
+- For now the magnifying glass only marks the words as a reference. Choosing it does nothing yet.
+- References look different from details, the passages other claims point at, which the place
+  page already highlights.
+
+**Done when:**
+- Every page that shows a claim's text marks every reference this way: the place page now, and
+  explore mode once D2 exists. A reference always gets a magnifying glass, whatever its status.
+- It works from the keyboard, and a screen reader reads out each reference's kind.
+
+**Worth knowing.** The fixtures already have date, person and place references, all confirmed.
+The contract also allows a `suggested` status. For now, show a suggested reference exactly like a
+confirmed one (sponsor, 19 November).
+
+**Not in this story.** A page for a reference that shows how it's used across Sagas, which may
+come later. Adding or confirming references while writing a claim. Changing `packages/fixtures`
+or `packages/contracts`.

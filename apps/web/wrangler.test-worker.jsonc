@@ -1,0 +1,59 @@
+// The P4 test Worker (#34, the P4 proposal's section 2). TEMPORARY.
+//
+// The full app as built for P7, deployed as its own Worker to check that a
+// Worker reaches the hosted database and to measure CPU on Cloudflare. The
+// sponsor's conditions (#11, 2 Nov 2026): fixture data only, no route, Workers
+// Free, removed afterwards. It is deployed and deleted only by
+// .github/workflows/p4-test-worker.yml, and this file goes when it does. P7
+// gets its own configuration.
+//
+// No routes and no custom domain: it answers only on its workers.dev address,
+// so the Workers-only deploy token is enough. The account ID is not a secret
+// (sponsor, 12 Oct 2026).
+//
+// The app reaches the database through Hyperdrive (the HYPERDRIVE binding
+// below), which holds its own copy of the connection string; the entry,
+// src/cloudflare/worker.ts, hands Hyperdrive's string to the app as
+// DATABASE_URL. The workflow also installs the repository secret
+// SUPABASE_DATABASE_URL as the Worker secret DATABASE_URL, which only the
+// connection check uses, to try the direct route as well.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sagas-app-test",
+  "account_id": "5e302dc6f0aa3537025b0e20b28ca23f",
+  // OpenNext's generated handler, wrapped to give the app Hyperdrive's string.
+  "main": "src/cloudflare/worker.ts",
+  // The runtime Wrangler ships with (workerd 1.20261012), so `wrangler dev`
+  // and the deployed Worker behave the same.
+  "compatibility_date": "2026-10-12",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  // The Hyperdrive configuration sagas-supabase, in the sponsor's account
+  // (#11): Supabase's Direct connection host, SSL mode require (the
+  // certificate is checked against public roots), caching off. Its ID isn't
+  // a secret.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "28a8d4b069ec4421aaede67c2e835519",
+    },
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  // Workers Logs records each invocation's CPU time and outcome. The check
+  // reads them; the sponsor can also see them in the dashboard.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "invocation_logs": true },
+  },
+  "vars": {
+    // The preview serves /dev, so the test does too (src/lib/dev-sandbox.ts).
+    "SAGAS_DEV_SANDBOX": "on",
+    // Turns on /api/test-worker/connection, which only this Worker has.
+    "SAGAS_CONNECTION_CHECK": "on",
+  },
+}

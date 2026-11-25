@@ -116,6 +116,10 @@ should ever point at one as though it were the source.
 
 ### How an upload works
 
+The experience layer builds the upload links on the live site, as part of
+integration (their story P13), against Cloudflare R2, which speaks the same S3
+API. The design below is the one they follow.
+
 The browser uploads **straight to storage**. Your server never handles the
 bytes.
 

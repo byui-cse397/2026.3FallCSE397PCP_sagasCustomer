@@ -6,10 +6,12 @@ This is the screen somebody is looking at when they hand over something that
 matters to them: recording audio, uploading a photograph, typing up what their
 grandmother said, or adding a translation to somebody else's record.
 
-It is separate from `apps/web` on purpose. That app is the reading experience
+You build it here, separate from `apps/web`, which is the reading experience
 and belongs to another team. Reading and contributing are different problems,
-with different users in different states of mind, and merging them means two
-teams editing the same files.
+with different users in different states of mind. On the live site, the reading
+site shows your screens by importing this package as it is, so nothing in this
+folder moves and you keep working here as usual. The experience layer does the
+importing (their story P9).
 
 ## Why the content layer has its own interface
 
@@ -27,7 +29,7 @@ what they decide not to say. None of that is visible from a test suite.
 - The terms in `docs/TERMS.md`, shown to a profile before its first
   contribution and again whenever the version changes. The version accepted is
   stored on the profile (`termsAcceptedVersion`) and every record stores the
-  version it was made under (`termsVersion`, currently `provisional-0.1`)
+  version it was made under (`termsVersion`, currently `provisional-0.2`)
 - What the contributor chooses for each record: whether the student teams may
   see it, whether it's public now, later or never, what happens to a photo's
   location, and whether it mentions other people (`recordChoices` in the
