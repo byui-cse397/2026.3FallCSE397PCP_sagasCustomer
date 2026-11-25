@@ -14,7 +14,11 @@ conflict on a later pull.
 ## YYYY-MM-DD
 
 - What works now, in a sentence a visitor would understand. (#pull request number, who)
+
+
 ```
+## 2026-11-25
+- N4-N5: Show where a record came from and How a narrative page reads the graph ([#60](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/80), Canon)
 
 ## 2026-11-21
 
