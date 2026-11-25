@@ -44,10 +44,44 @@ describe('ArticleView', () => {
 
     expect(page).toContain('Records');
     expect(page).toContain('My grandmother&#x27;s shop, I think.');
-    expect(page).toContain('Provided by June Alder (invented)');
+    expect(page).toContain('Profile June Alder (invented)');
     expect(page).toContain('No claims have been shared about this site yet.');
     expect(page).toContain('Its records are listed above.');
     expect(page).not.toContain('TODO');
+  });
+
+  it('shows a record profile and links to its collection and the collection records', () => {
+    const state = loadSiteState('corner-shop', 't3');
+    const record = state.records.find((item) => item.id === 'rec-cs-photo');
+    expect(record).toBeDefined();
+    if (!record) return;
+
+    const collectionId = 'collection-june-family';
+    const collection = {
+      id: collectionId,
+      contributorId: record.contributorId,
+      recordIds: [record.id, 'rec-cs-family-album'],
+      note: 'June’s family photographs',
+      createdAt: '2026-01-12T17:14:00Z',
+    };
+    const page = renderToStaticMarkup(
+      <ArticleView
+        state={{
+          ...state,
+          records: state.records.map((item) =>
+            item.id === record.id ? { ...item, collectionId } : item,
+          ),
+          collections: [collection],
+        }}
+      />,
+    );
+
+    expect(page).toContain('Profile June Alder (invented)');
+    expect(page).toContain('href="#collection-collection-june-family"');
+    expect(page).toContain('June’s family photographs');
+    expect(page).toContain('Handed over by profile June Alder (invented)');
+    expect(page).toContain('href="#record-rec-cs-photo"');
+    expect(page).toContain('Record rec-cs-family-album (not shown on this site)');
   });
 
   it('shows a valid page when there are no sections, claims, or records', () => {
