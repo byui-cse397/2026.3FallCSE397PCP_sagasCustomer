@@ -18,7 +18,7 @@ conflict on a later pull.
 
 ## 2026-11-25
 
-- The web app serves stand-ins for the other two layers' APIs at `/api/mock/capture` and `/api/mock/graph`, and finds each API through a setting that points at its stand-in until that layer's release is merged. ([#80](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/80), Ema)
+- The web app serves stand-ins for the other two layers' APIs at `/api/mock/capture` and `/api/mock/graph`, and finds each API through a setting that points at its stand-in until that layer's release is merged. ([#81][(https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/81), Ema)
 
 ## 2026-11-21
 
