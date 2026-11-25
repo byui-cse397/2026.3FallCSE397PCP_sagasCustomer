@@ -1315,7 +1315,7 @@ holding one snapshot per moment.
 **Not in this story.** Contributions from the other layers. They arrive with integration, in
 the same shape.
 
-### Da12 · Mount the shared mocks
+### Da12 · Mount the shared mocks (Ema)
 
 **Workstream:** Data. **Status:** Ready. Added 18 November, rewritten 22 November.
 
