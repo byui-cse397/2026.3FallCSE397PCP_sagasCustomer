@@ -11,6 +11,13 @@ import type {
 import { SiteHeader } from '../site/SiteHeader';
 import { PhraseClaims } from './PhraseClaims';
 
+function contributorName(contributor: Contributor | undefined, contributorId: string): string {
+  if (!contributor) return `contributor ${contributorId}`;
+
+  const name = contributor.displayName;
+  return contributor.fictional && !name.endsWith('(invented)') ? `${name} (invented)` : name;
+}
+
 /** Renders one section and the disputed readings named by its composition. */
 function NarrativeSection({
   section,
@@ -54,11 +61,7 @@ function NarrativeSection({
             <p className="text-xs text-neutral-600">
               Based on claims by{' '}
               {[...claimAuthors.values()]
-                .map((contributor) =>
-                  contributor.fictional
-                    ? `${contributor.displayName} (invented)`
-                    : contributor.displayName,
-                )
+                .map((contributor) => contributorName(contributor, contributor.id))
                 .join(', ')}
             </p>
           )}
@@ -85,9 +88,7 @@ function NarrativeSection({
               const names = reading.contributorIds
                 .map((id) => {
                   const contributor = contributors.get(id);
-                  return contributor
-                    ? `${contributor.displayName}${contributor.fictional ? ' (invented)' : ''}`
-                    : `Contributor ${id}`;
+                  return contributorName(contributor, id);
                 })
                 .join(', ');
 
@@ -158,10 +159,7 @@ function RecordsSection({
                 </p>
                 {description && <p className="text-sm">{description}</p>}
                 <p className="text-xs text-neutral-600">
-                  Profile{' '}
-                  {contributor
-                    ? `${contributor.displayName}${contributor.fictional ? ' (invented)' : ''}`
-                    : `contributor ${record.contributorId}`}
+                  Brought by {contributorName(contributor, record.contributorId)}
                 </p>
                 {record.collectionId && collectionsById.has(record.collectionId) && (
                   <p className="text-xs">
@@ -185,9 +183,7 @@ function RecordsSection({
           </h3>
           {collections.map((collection) => {
             const contributor = contributors.get(collection.contributorId);
-            const profile = contributor
-              ? `${contributor.displayName}${contributor.fictional ? ' (invented)' : ''}`
-              : `contributor ${collection.contributorId}`;
+            const profile = contributorName(contributor, collection.contributorId);
 
             return (
               <article
@@ -196,7 +192,7 @@ function RecordsSection({
                 className="space-y-2 rounded border border-neutral-200 p-3"
               >
                 <h4 className="font-medium">{collection.note ?? 'Untitled collection'}</h4>
-                <p className="text-xs text-neutral-600">Handed over by profile {profile}</p>
+                <p className="text-xs text-neutral-600">Brought by {profile}</p>
                 <ul className="list-inside list-disc space-y-1">
                   {collection.recordIds.map((recordId) => {
                     const member = recordsById.get(recordId);
@@ -210,7 +206,7 @@ function RecordsSection({
                                 `Record ${recordId}`)}
                           </a>
                         ) : (
-                          <span>Record {recordId} (not shown on this site)</span>
+                          <span>A collection member is not shown on this page.</span>
                         )}
                       </li>
                     );

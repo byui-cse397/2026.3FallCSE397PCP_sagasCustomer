@@ -584,7 +584,7 @@ without help.
 
 ### N5 · How a narrative page reads the graph (Canon)
 
-**Workstream:** Narrative page. **Status:** Awaiting Sponsor
+**Workstream:** Narrative page. **Status:** Ready
 
 **Goal.** How claims are weighed is still open, so this workstream designs how
 the page reads as well as building it, and N1 carries on against the stand-in
@@ -605,7 +605,7 @@ it and treats it as open.
 
 ### N4 · Show where a record came from (Canon)
 
-**Workstream:** Narrative page. **Status:** (Complete?). Needs N1, De7, and
+**Workstream:** Narrative page. **Status:** Later. Needs N1, De7, and
 collections in the contract (see "What does a collection carry?" in
 `docs/DESIGN-QUESTIONS.md`).
 

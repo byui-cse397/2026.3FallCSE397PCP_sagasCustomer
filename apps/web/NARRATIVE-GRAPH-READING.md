@@ -45,10 +45,13 @@ equal visual weight, preserve who said each and which record each came from,
 and do not label either a winner or show a tally.
 
 The page should make disagreement about a reading, not look like a judgment of
-the contributor. Whether that distinction feels right to people whose stories
-are disputed remains open; see ["Does disputing a claim feel like disputing the
-person who wrote it?" and "What should a disagreement look like to the people
-in it?" in DESIGN-QUESTIONS.md](../../docs/DESIGN-QUESTIONS.md#does-disputing-a-claim-feel-like-disputing-the-person-who-wrote-it).
+the contributor. How the interface can make that distinction is open; see
+["Does disputing a claim feel like disputing the person who wrote it?" in
+DESIGN-QUESTIONS.md](../../docs/DESIGN-QUESTIONS.md#does-disputing-a-claim-feel-like-disputing-the-person-who-wrote-it).
+The wider question of how permanent public disagreement feels to the people
+involved is outside this project's remit, as recorded in Part 4 under
+["What should a disagreement look like to the people in it?" in
+DESIGN-QUESTIONS.md](../../docs/DESIGN-QUESTIONS.md#what-should-a-disagreement-look-like-to-the-people-in-it).
 
 ## How records and profiles read
 

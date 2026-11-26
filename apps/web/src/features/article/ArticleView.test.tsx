@@ -44,13 +44,13 @@ describe('ArticleView', () => {
 
     expect(page).toContain('Records');
     expect(page).toContain('My grandmother&#x27;s shop, I think.');
-    expect(page).toContain('Profile June Alder (invented)');
+    expect(page).toContain('Brought by June Alder (invented)');
     expect(page).toContain('No claims have been shared about this site yet.');
     expect(page).toContain('Its records are listed above.');
     expect(page).not.toContain('TODO');
   });
 
-  it('shows a record profile and links to its collection and the collection records', () => {
+  it('shows the corner shop record and links visible collection members', () => {
     const state = loadSiteState('corner-shop', 't3');
     const record = state.records.find((item) => item.id === 'rec-cs-photo');
     expect(record).toBeDefined();
@@ -76,12 +76,39 @@ describe('ArticleView', () => {
       />,
     );
 
-    expect(page).toContain('Profile June Alder (invented)');
+    expect(page).toContain('Brought by June Alder (invented)');
     expect(page).toContain('href="#collection-collection-june-family"');
     expect(page).toContain('June’s family photographs');
-    expect(page).toContain('Handed over by profile June Alder (invented)');
+    expect(page).toContain('Brought by June Alder (invented)');
     expect(page).toContain('href="#record-rec-cs-photo"');
-    expect(page).toContain('Record rec-cs-family-album (not shown on this site)');
+    expect(page).toContain('A collection member is not shown on this page.');
+    expect(page).not.toContain('rec-cs-family-album');
+  });
+
+  it('shows the real freight depot collection at t1 and t3', () => {
+    for (const [stateId, expectedMembers] of [
+      ['t1', 1],
+      ['t3', 2],
+    ] as const) {
+      const state = loadSiteState('freight-depot', stateId);
+      const collection = state.collections.find((item) => item.id === 'col-fd-luis');
+      expect(collection).toBeDefined();
+      if (!collection) continue;
+
+      const page = renderToStaticMarkup(<ArticleView state={state} />);
+      const collectionMarkup = /<article id="collection-col-fd-luis"[\s\S]*?<\/article>/
+        .exec(page)?.[0];
+
+      expect(collectionMarkup).toBeDefined();
+      expect(collection.recordIds).toHaveLength(expectedMembers);
+      expect(collectionMarkup).toContain('Two photos from my uncle&#x27;s album');
+      expect(collectionMarkup).toContain('Brought by Luis (invented)');
+      expect(collectionMarkup).not.toContain('(invented) (invented)');
+      expect(page).not.toContain('Luis (invented) (invented)');
+      for (const recordId of collection.recordIds) {
+        expect(collectionMarkup).toContain(`href="#record-${recordId}"`);
+      }
+    }
   });
 
   it('shows a valid page when there are no sections, claims, or records', () => {
