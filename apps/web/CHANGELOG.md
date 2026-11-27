@@ -16,6 +16,10 @@ conflict on a later pull.
 - What works now, in a sentence a visitor would understand. (#pull request number, who)
 ```
 
+## 2026-11-25
+
+- N4–N5: Records show their profile and collection, and the narrative graph reading is documented. (#80, Canon)
+
 ## 2026-11-21
 
 - Every page of the web app, including the terms page and the not-found page, has a footer link to the contributor terms. ([#71](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/71), Michael)

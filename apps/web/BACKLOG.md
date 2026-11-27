@@ -835,7 +835,7 @@ into the design:
 **Not in this story.** Deciding who can make a home's location exact. That's
 still open.
 
-### N6 · The freight depot as a page
+### N6 · The freight depot as a page (Canon)
 
 **Workstream:** Narrative page. **Status:** Ready.
 
@@ -853,7 +853,7 @@ raised in the questions issue.
 **Not in this story.** Deciding how a reported record or an unfinished upload
 looks.
 
-### N7 · A claim in another language, with its translations
+### N7 · A claim in another language, with its translations (Canon)
 
 **Workstream:** Narrative page. **Status:** Later. Needs N6 and contract
 2.6.0, which includes the change to how translations are stored.
@@ -876,7 +876,7 @@ translations disagree, the page shows both, and neither replaces the original.
 **Not in this story.** Translating anything, or deciding which translation is
 right.
 
-### N8 · A recording transcribed one part at a time
+### N8 · A recording transcribed one part at a time (Canon)
 
 **Workstream:** Narrative page. **Status:** Later. Needs N6 and contract
 2.6.0, which includes the change to how transcripts are stored.
@@ -897,7 +897,7 @@ still shows, and says it's waiting for one.
 **Not in this story.** An audio player that follows along with the
 transcript.
 
-### N9 · A link record and its preview
+### N9 · A link record and its preview (Canon)
 
 **Workstream:** Narrative page. **Status:** Later. Needs N6 and contract
 2.6.0.

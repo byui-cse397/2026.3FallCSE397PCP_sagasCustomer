@@ -1,5 +1,6 @@
 import type {
   ClaimState,
+  Collection,
   Composition,
   Contributor,
   DetailStatus,
@@ -9,6 +10,13 @@ import type {
 } from '@sagas/contracts';
 import { SiteHeader } from '../site/SiteHeader';
 import { PhraseClaims } from './PhraseClaims';
+
+function contributorName(contributor: Contributor | undefined, contributorId: string): string {
+  if (!contributor) return `contributor ${contributorId}`;
+
+  const name = contributor.displayName;
+  return contributor.fictional && !name.endsWith('(invented)') ? `${name} (invented)` : name;
+}
 
 /** Renders one section and the disputed readings named by its composition. */
 function NarrativeSection({
@@ -53,11 +61,7 @@ function NarrativeSection({
             <p className="text-xs text-neutral-600">
               Based on claims by{' '}
               {[...claimAuthors.values()]
-                .map((contributor) =>
-                  contributor.fictional
-                    ? `${contributor.displayName} (invented)`
-                    : contributor.displayName,
-                )
+                .map((contributor) => contributorName(contributor, contributor.id))
                 .join(', ')}
             </p>
           )}
@@ -84,9 +88,7 @@ function NarrativeSection({
               const names = reading.contributorIds
                 .map((id) => {
                   const contributor = contributors.get(id);
-                  return contributor
-                    ? `${contributor.displayName}${contributor.fictional ? ' (invented)' : ''}`
-                    : `Contributor ${id}`;
+                  return contributorName(contributor, id);
                 })
                 .join(', ');
 
@@ -108,13 +110,17 @@ function NarrativeSection({
 /** Records remain visible whether or not a site has composed sections. */
 function RecordsSection({
   records,
+  collections,
   claims,
   contributors,
 }: {
   records: SourceRecord[];
+  collections: Collection[];
   claims: ClaimState[];
   contributors: Map<string, Contributor>;
 }) {
+  const collectionsById = new Map(collections.map((collection) => [collection.id, collection]));
+  const recordsById = new Map(records.map((record) => [record.id, record]));
   const recordRoles = new Map<string, Set<string>>();
   for (const { claim } of claims) {
     const sourceRoles = recordRoles.get(claim.sourceRecordId) ?? new Set<string>();
@@ -140,7 +146,11 @@ function RecordsSection({
             const description = record.note ?? record.text;
 
             return (
-              <li key={record.id} className="space-y-1 rounded border border-neutral-200 p-3">
+              <li
+                id={`record-${record.id}`}
+                key={record.id}
+                className="space-y-1 rounded border border-neutral-200 p-3"
+              >
                 <p className="text-sm font-medium">
                   {record.media.map((media) => media.kind).join(', ') || 'Written record'}
                 </p>
@@ -149,17 +159,63 @@ function RecordsSection({
                 </p>
                 {description && <p className="text-sm">{description}</p>}
                 <p className="text-xs text-neutral-600">
-                  Provided by{' '}
-                  {contributor
-                    ? `${contributor.displayName}${contributor.fictional ? ' (invented)' : ''}`
-                    : `contributor ${record.contributorId}`}
+                  Brought by {contributorName(contributor, record.contributorId)}
                 </p>
+                {record.collectionId && collectionsById.has(record.collectionId) && (
+                  <p className="text-xs">
+                    Collection:{' '}
+                    <a className="underline" href={`#collection-${record.collectionId}`}>
+                      {collectionsById.get(record.collectionId)?.note ?? 'View this collection'}
+                    </a>
+                  </p>
+                )}
               </li>
             );
           })}
         </ul>
       ) : (
         <p className="text-sm text-neutral-600">No records have been shared yet.</p>
+      )}
+      {collections.length > 0 && (
+        <section aria-labelledby="site-collections" className="space-y-3">
+          <h3 id="site-collections" className="text-base font-medium">
+            Collections
+          </h3>
+          {collections.map((collection) => {
+            const contributor = contributors.get(collection.contributorId);
+            const profile = contributorName(contributor, collection.contributorId);
+
+            return (
+              <article
+                id={`collection-${collection.id}`}
+                key={collection.id}
+                className="space-y-2 rounded border border-neutral-200 p-3"
+              >
+                <h4 className="font-medium">{collection.note ?? 'Untitled collection'}</h4>
+                <p className="text-xs text-neutral-600">Brought by {profile}</p>
+                <ul className="list-inside list-disc space-y-1">
+                  {collection.recordIds.map((recordId) => {
+                    const member = recordsById.get(recordId);
+                    return (
+                      <li key={recordId}>
+                        {member ? (
+                          <a className="underline" href={`#record-${recordId}`}>
+                            {member.note ??
+                              member.text ??
+                              (member.media.map((media) => media.kind).join(', ') ||
+                                `Record ${recordId}`)}
+                          </a>
+                        ) : (
+                          <span>A collection member is not shown on this page.</span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+            );
+          })}
+        </section>
       )}
     </section>
   );
@@ -178,7 +234,12 @@ export function ArticleView({ state }: { state: GraphState }) {
   return (
     <main className="space-y-6">
       <SiteHeader state={state} />
-      <RecordsSection records={state.records} claims={state.claims} contributors={contributors} />
+      <RecordsSection
+        records={state.records}
+        collections={state.collections}
+        claims={state.claims}
+        contributors={contributors}
+      />
       {state.sections.length > 0 ? (
         <div className="space-y-6">
           {state.sections.map((section) => (
