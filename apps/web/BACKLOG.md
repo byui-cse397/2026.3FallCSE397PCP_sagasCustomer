@@ -955,6 +955,25 @@ brand's colours and type, through your design tokens, so a change happens in one
 **Done when** the tokens carry the brand, the map and the pages use them, and the contrast still
 meets your accessibility rule.
 
+### R1 · Your first release
+
+**Workstream:** Platform. **Status:** Ready. The pull request is open by the end of Wednesday 2 December.
+
+**Goal.** The site's code goes upstream as it is, so it's in one place with the other two layers'
+releases, and P12 can deploy `app.sagasproject.org` from upstream. `docs/WORKING-TOGETHER.md`
+("Releases at the end of the semester") has the dates, and `docs/GIT.md` ("Sending a release") has
+the steps, including the path for a `main` that only changes through a pull request.
+
+**Done when:**
+- a pull request from `release-1` on your fork to `Civum/sagas` carries `apps/web`, `apps/landing`,
+  `apps/ui-api`, `apps/db-warmer`, `packages/read-model` and `packages/terms` as they are on your
+  `main`, plus `pnpm-lock.yaml`;
+- the app starts from the release branch, and its own tests pass.
+
+**Not in this story.** The deploy workflows, which come with P12. The `tooling/eslint` changes,
+which go upstream as their own small pull request. Fixes go in the second release, on Wednesday 9
+December.
+
 ### H1 · A handoff note for your work
 
 **Status:** Ready, for the end of the semester.
