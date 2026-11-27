@@ -34,9 +34,8 @@ changes" in the root README for the rules; this file is how to carry them out.
 
 ## How work reaches the other two schools
 
-You cannot see their repositories and they cannot see yours. There is no shared
-branch, no shared database, and no way to pull a change directly from another
-team. Every path between the three schools runs through upstream:
+There's no shared branch, and you don't pull changes from another team's
+fork. Every path between the three schools runs through upstream:
 
 ```
 YourOrg/sagas  ──PR──▶  Civum/sagas  ──Sunday──▶  TheirOrg/sagas
@@ -264,28 +263,53 @@ outside your own folders. So start a branch from upstream's `main` instead, and
 copy only your folders onto it. First bring your own `main` up to date with
 upstream and push it, so the release has your latest work and doesn't undo any
 of upstream's. "Pulling upstream forward" above covers the merge, including
-what to do if it conflicts.
+what to do if it conflicts. For a release you don't need to wait for a
+check-in to do it.
 
 ```bash
 git checkout main
 git pull origin main
 git fetch upstream
 git merge upstream/main
+pnpm install
+pnpm fixtures:build
+pnpm lint && pnpm typecheck && pnpm test
 git push origin main
 git checkout -b release-1 upstream/main
 git rm -r -q --ignore-unmatch apps/capture-api apps/capture-web
 git checkout main -- apps/capture-api apps/capture-web
 pnpm install
-git add apps packages pnpm-lock.yaml
+git add pnpm-lock.yaml
+git diff --cached --stat upstream/main
 git commit -m "Release 1: content layer"
 git push origin release-1
 ```
 
 Put your own layer's folders on the `git rm` line and the `git checkout main --`
 line, and your layer in the commit message. The `git rm` line clears upstream's
-copy of your folders first, so a file you deleted doesn't come back. `pnpm
-install` updates `pnpm-lock.yaml` for your dependencies, which is the one file
-outside your folders that belongs in a release.
+copy of your folders first, so a file you deleted doesn't come back. The
+`git checkout main --` line stages your folders as your `main` has them, and
+only files your `main` tracks, so nothing your `.gitignore` keeps out comes
+along. `pnpm install` updates `pnpm-lock.yaml` for your dependencies, so add
+that by hand. Don't use `git add apps` or `git add .` here: they pick up
+any untracked file in your folders that `.gitignore` doesn't cover, such as a
+`.dev.vars` file holding secrets.
+
+`git diff --cached --stat upstream/main` lists every file the commit will
+change. Read it before you commit. Most of it will be inside your folders,
+plus `pnpm-lock.yaml`. If something else is there that you didn't mean to send,
+unstage it with `git restore --staged <path>`. If it belongs in the release,
+leave it and say why in the pull request description.
+
+If `pnpm fixtures:build` changed anything on `main`, commit it there before you
+push, as "Pulling upstream forward" says.
+
+**If your fork's `main` only changes through a pull request**, `git push origin
+main` is refused. Put the merge on a branch with `git checkout -b sync-upstream`
+and push that with `git push origin sync-upstream`. Then open a pull request in
+your own fork, have a teammate approve it, and merge it with **Create a merge
+commit**. Once it has merged, run `git checkout main` and `git pull origin main`,
+and carry on from the `git checkout -b release-1` line.
 
 Before you open the pull request, start your app from that branch once. If it
 needs a change outside your folders, say so in the description rather than

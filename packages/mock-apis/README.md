@@ -3,8 +3,9 @@
 Stand-ins for the content layer's API and the intelligence layer's API, so the reading site can
 work before either layer releases its API, and keep working if one of them is down.
 
-Each mock is a plain function from a web `Request` to a `Response`. The same code runs inside a
-Next.js route handler, on Cloudflare Workers, and on its own with Node.
+Each mock is a plain function from a web `Request` to a `Response`. The tests call it in Node.
+The mounting snippet below compiled against `apps/web` when I checked it by hand on 22 November,
+and nothing checks it automatically. I haven't seen it run on Cloudflare Workers.
 
 ## What's in it
 
@@ -41,7 +42,9 @@ route. The real API's `ENDPOINTS.md` says which name it uses.
 
 The content layer's mock starts with the fixture places and records. The intelligence layer's starts
 empty. Both keep whatever you send them in memory, so it disappears when they restart. Nothing they
-make up ever reaches a database.
+make up ever reaches a database. We haven't checked how long a deployed site keeps that memory
+between requests, so on the deployed site, don't count on the mock remembering what you sent. Test
+anything that depends on it locally.
 
 ## Using it in the reading site
 

@@ -41,6 +41,38 @@ it. This is the most useful field in the entry.
 
 ---
 
+## 2026-11-26 — corrections to the release steps
+
+**Affects:** all three layers
+
+**What:** "Sending a release" in `docs/GIT.md` now runs the checks in the code block, adds only
+`pnpm-lock.yaml` by hand, and has you list the staged files with `git diff --cached --stat
+upstream/main` before committing. It also covers a fork whose `main` only changes through a pull
+request, and says a release doesn't wait for a check-in to merge upstream. The `capture-api`
+README and the content layer's phase guide say that the content layer builds upload links against
+MinIO on its own machine, and the experience layer builds them against R2 on the live site. The
+`capture-web` README says what the site expects to need from that folder. In
+`docs/WORKING-TOGETHER.md`, the paragraph about switching between the mocks and the real APIs says
+who flips the switch, and the rule about Sundays says the releases don't wait for one. In
+`apps/web/README.md`, "Deploying it" has a line about sizing hosting for the traffic Sagas expects.
+`packages/mock-apis/README.md` says what nobody has checked yet. The release section now has the
+intelligence layer's first release carry its scorer however unfinished, and adds `apps/ui-api` and
+`apps/db-warmer` to the experience layer's list. The experience layer's statement of work and start
+guide say it builds the upload links on the live site.
+
+**Why:** the old steps ran `git add apps packages`, which would have staged any untracked file in
+those folders that `.gitignore` doesn't cover, such as a `.dev.vars` file with secrets in it. A
+fork whose `main` needs a pull request refuses the `git push origin main` step. The two upload
+passages read as if they disagreed.
+
+**You need to:**
+- *every layer* — use the new "Sending a release" steps for your release.
+- *content layer* — nothing else. Your upload work against MinIO is unchanged.
+- *intelligence layer* — put your scorer in `apps/graph-api` on your `main` for the first release,
+  as far as it's got.
+- *experience layer* — add `apps/ui-api` and `apps/db-warmer` to your release. The hosting line
+  matches what we agreed in your questions issue.
+
 ## 2026-11-22 — releases, mock APIs, and an open question about the graph
 
 **Affects:** all three layers

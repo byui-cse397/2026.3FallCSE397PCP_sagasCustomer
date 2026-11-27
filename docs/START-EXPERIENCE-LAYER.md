@@ -101,7 +101,9 @@ contract version 1.0.0. Pull upstream to get 2.0.0 (see `docs/GIT.md`).
 Everything in this list belongs to the other layers, and nothing you build
 depends on it.
 
-- `apps/capture-api`, `apps/capture-web`, which is how contributions arrive
+- `apps/capture-api`, `apps/capture-web`, which is how contributions arrive. The
+  exception is "Storage" in `apps/capture-api/README.md`, which is the design you
+  follow for the upload links on the live site
 - `apps/graph-api`, the scoring and claim graph work
 - `packages/fixtures/scoring/`, scoring rules for a different layer
 - The object storage and ffmpeg sections of `SETUP.md`
