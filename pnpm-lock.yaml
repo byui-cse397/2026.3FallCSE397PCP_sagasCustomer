@@ -314,6 +314,9 @@ importers:
       '@sagas/fixtures':
         specifier: workspace:*
         version: link:../../packages/fixtures
+      '@sagas/mock-apis':
+        specifier: workspace:*
+        version: link:../../packages/mock-apis
       '@sagas/read-model':
         specifier: workspace:*
         version: link:../../packages/read-model

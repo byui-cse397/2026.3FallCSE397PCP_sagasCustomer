@@ -45,6 +45,15 @@ under `pnpm dev` and in tests, off in a production build unless a deployment
 sets it to `on`: the fixture preview (P7) will, and the public site won't. See
 `src/lib/dev-sandbox.ts`.
 
+**The other two layers' APIs are settings.** `SAGAS_CAPTURE_API` is the content
+layer's API and `SAGAS_GRAPH_API` the intelligence layer's. Unset, they point at
+the shared mocks (`packages/mock-apis`), which the site mounts at
+`/api/mock/capture` and `/api/mock/graph`. Moving a layer to its real API, or
+back to the mock, is a change to its setting that someone makes on purpose.
+Nothing switches on its own when a call fails. Server code calls another layer
+with `callLayerApi()`; browser code gets the address from a server component.
+See `src/lib/layer-apis.ts`.
+
 **You do not need a Mapbox token to work on this.** With no token, the map area
 renders a list of the same places instead. That list is also how the map's
 information reaches someone using a screen reader, so it ships either way and

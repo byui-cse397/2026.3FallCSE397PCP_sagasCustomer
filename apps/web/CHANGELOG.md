@@ -16,6 +16,10 @@ conflict on a later pull.
 - What works now, in a sentence a visitor would understand. (#pull request number, who)
 ```
 
+## 2026-11-25
+
+- The web app serves stand-ins for the other two layers' APIs at `/api/mock/capture` and `/api/mock/graph`, and finds each API through a setting that points at its stand-in until that layer's release is merged. ([#81](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/81), Ema)
+
 ## 2026-11-21
 
 - Every page of the web app, including the terms page and the not-found page, has a footer link to the contributor terms. ([#71](https://github.com/byui-cse397/2026.3FallCSE397PCP_sagasCustomer/pull/71), Michael)

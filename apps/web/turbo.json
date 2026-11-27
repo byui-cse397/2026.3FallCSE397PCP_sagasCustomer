@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "env": ["SAGAS_DEV_SANDBOX", "SAGAS_CONNECTION_CHECK"],
+      "env": ["SAGAS_DEV_SANDBOX", "SAGAS_CONNECTION_CHECK", "SAGAS_CAPTURE_API", "SAGAS_GRAPH_API"],
       "passThroughEnv": ["SAGAS_DATABASE_ROUTE", "SAGAS_DIRECT_DATABASE_URL"]
     }
   }
