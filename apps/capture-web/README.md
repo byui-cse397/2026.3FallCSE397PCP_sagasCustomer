@@ -9,9 +9,12 @@ grandmother said, or adding a translation to somebody else's record.
 You build it here, separate from `apps/web`, which is the reading experience
 and belongs to another team. Reading and contributing are different problems,
 with different users in different states of mind. On the live site, the reading
-site shows your screens by importing this package as it is, so nothing in this
-folder moves and you keep working here as usual. The experience layer does the
-importing (their story P9).
+site will show your screens by importing this package, so your screens stay
+in this folder and you keep working here as usual. The experience layer does
+the importing, and adds what it needs to bring your screens in, probably a
+line in `src/index.ts` that exports your top-level component. Nobody has tried
+it yet, so if it needs anything from you, the experience layer will ask on your
+release pull request.
 
 ## Why the content layer has its own interface
 

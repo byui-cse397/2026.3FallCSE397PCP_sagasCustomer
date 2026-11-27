@@ -181,6 +181,8 @@ version is below.
   method.
 - **A preview for each pull request comes later,** if a proposal makes the case
   for it.
+- **Size hosting for the traffic Sagas expects, a handful of visitors,**
+  rather than the scale case. We'll tune for scale when real traffic shows up.
 
 Keep the app portable. Nothing load-bearing should depend on one host's
 special behavior, which is why putting the web app and the API in containers is

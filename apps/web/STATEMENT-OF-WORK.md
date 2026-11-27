@@ -20,7 +20,9 @@ working way to hand over a record (uploading, recording, the submission form),
 in `apps/capture-api` and `apps/capture-web`, and real submissions go through
 it. This team can design contributing as part of the whole product, in
 `apps/web`, against invented data. Anything it submits for real goes through the
-content layer's API. The intelligence layer owns the scoring that orders claims.
+content layer's API. On the live site, this team builds the upload links against
+the hosted storage, following the design in `apps/capture-api/README.md`
+("Storage"). The intelligence layer owns the scoring that orders claims.
 This team builds against the shared contract and fixtures.
 
 ## How we work
