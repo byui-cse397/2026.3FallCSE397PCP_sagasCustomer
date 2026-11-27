@@ -289,6 +289,28 @@ instead of inside the request. This is the other kind of queue in this project: 
 
 **Not in this story.** Transcoding, thumbnails, and where the job runs once the site is hosted.
 
+### R1 · Your first release
+
+**Status:** Ready. It's a stretch goal for your layer: if the pull request is open by the end of
+Wednesday 2 December, your screens can be on the site before your semester ends.
+
+**Goal.** Your app goes upstream as it is, so the site can bring in your screens and the experience
+layer can call your API. `docs/WORKING-TOGETHER.md` ("Releases at the end of the semester") has the
+dates, and `docs/GIT.md` ("Sending a release") has the steps.
+
+**Done when:**
+- a pull request from `release-1` on your fork to `Civum/sagas` carries `apps/capture-api` and
+  `apps/capture-web` as they are on your `main`, plus `pnpm-lock.yaml`;
+- `apps/capture-api/ENDPOINTS.md` lists each route: the method and path, what it takes, what it
+  returns (the type's name in `packages/contracts/src/model.ts`, where there is one), and whether it
+  works yet. Where a route differs from `packages/mock-apis/README.md`, say so. You don't need to
+  rename anything;
+- your app starts from the release branch, and its own tests pass.
+
+**Not in this story.** Finishing more stories first, or anything outside your two folders (say in
+the description if you need something there). Fixes go in the second release, on Wednesday 9
+December.
+
 ### H1 · A handoff note for your work
 
 **Status:** Ready, for the end of the semester.

@@ -118,7 +118,9 @@ should ever point at one as though it were the source.
 
 The experience layer builds the upload links on the live site, as part of
 integration (their story P13), against Cloudflare R2, which speaks the same S3
-API. The design below is the one they follow.
+API, from the design below. On your own machine, your API hands out the links
+against MinIO, as `docs/PHASE-2-CONTENT-LAYER.md` sets out. Who runs the
+processing in steps 4 and 5 on the live site isn't decided yet.
 
 The browser uploads **straight to storage**. Your server never handles the
 bytes.
@@ -133,7 +135,7 @@ bytes.
 4. The browser tells your API it finished. Your API checks the object is
    actually there and is the size it was told to expect, marks it `uploaded`,
    and queues a job.
-5. A worker probes it with `ffprobe`, builds whatever derivatives it needs,
+5. A background job probes it with `ffprobe`, builds whatever derivatives it needs,
    fills in duration or dimensions, and marks it `ready`.
 
 Reading works the same way in reverse. **Never store a URL.** Generate a

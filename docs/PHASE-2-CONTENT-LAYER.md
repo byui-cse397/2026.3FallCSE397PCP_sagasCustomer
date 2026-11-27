@@ -147,6 +147,10 @@ these:
 - Slow work (reading a recording's length, making thumbnails) runs as a
   background job.
 
+You build this against MinIO on your own machine. On the live site, the
+experience layer builds the same links against Cloudflare R2, which is
+Cloudflare's file storage and works like MinIO.
+
 ## Checking your API against the guidelines
 
 `packages/fixtures/capture/rules.ts` holds guidelines for your API, written as

@@ -383,6 +383,29 @@ error later.
 **Not in this story.** Scoring anything, or changing the example files. If a file turns out to be
 broken, tell me and I'll fix it upstream.
 
+### R1 · Your first release
+
+**Status:** Ready. The pull request is open by the end of Wednesday 2 December.
+
+**Goal.** Your scorer goes upstream, however unfinished, so the other two layers can read it and
+try it. Having it there matters more than having it done. `docs/WORKING-TOGETHER.md` ("Releases at
+the end of the semester") has the dates, and `docs/GIT.md` ("Sending a release") has the steps.
+
+**Done when:**
+- your scorer is in `apps/graph-api` on your fork's `main`. If it's on another branch, like
+  `Test-Scorer`, merge it into `main` first, because the release copies from there;
+- a pull request from `release-1` on your fork to `Civum/sagas` carries `apps/graph-api` as it is on
+  your `main`, plus `pnpm-lock.yaml`;
+- `apps/graph-api/ENDPOINTS.md` lists each route: the method and path, what it takes, what it
+  returns (the type's name in `packages/contracts/src/model.ts`, where there is one), and whether it
+  works yet. `POST /score` answering 501 is fine, as long as the file says so. Where a route differs
+  from `packages/mock-apis/README.md`, say so. You don't need to rename anything;
+- your app starts from the release branch, and its own tests pass. The scorer doesn't have to pass
+  every scoring rule.
+
+**Not in this story.** Finishing the scorer, or having it drive the live site, which is the stretch
+goal. Whatever is still missing goes in the second release, on Wednesday 9 December.
+
 ### H1 · A handoff note for your work
 
 **Status:** Ready, for the end of the semester.

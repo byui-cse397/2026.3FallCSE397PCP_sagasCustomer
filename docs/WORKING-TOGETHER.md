@@ -9,7 +9,7 @@ Read it once at the start.
 
 **Check-in, 30 minutes.** Weekly for the first month while scope is still being
 worked out, then every other week once you know what you're building. Your
-programme's exact day is set with your team.
+team and I set your exact day together.
 
 **Office hours, 30 minutes, every week, right before the check-in.**
 It runs if there's an agenda and is canceled if there isn't. It exists so
@@ -37,7 +37,7 @@ pushing something rushed at 5:55pm.
 
 ### Releases at the end of the semester
 
-The three programmes end on different days, so the releases come early, and each week brings the
+The three semesters end on different days, so the releases come early, and each week brings the
 site (the hosted `apps/web`) closer to one product. Until I merge a layer's release, the site uses
 the mocks: stand-ins for the content layer's API and the intelligence layer's API, in
 `packages/mock-apis`.
@@ -58,7 +58,8 @@ what each layer sends:
 - **Content layer:** `apps/capture-api` and `apps/capture-web`.
 - **Intelligence layer:** `apps/graph-api`, with one scorer in it. If your scorer lives somewhere
   else, move it into `apps/graph-api` on your `main` first, because the release copies from there.
-- **Experience layer:** `apps/web`, `apps/landing`, `packages/read-model` and `packages/terms`.
+- **Experience layer:** `apps/web`, `apps/landing`, `apps/ui-api`, `apps/db-warmer`, `packages/read-model`
+  and `packages/terms`. The deploy workflows come later, with deploying from upstream.
 
 **If your layer has an API, put an `ENDPOINTS.md` in its folder** (`apps/capture-api` or
 `apps/graph-api`). List each route: the method and path, what it takes, what it returns (the type's
@@ -70,24 +71,28 @@ anything.
 **The release pull requests are where we work things out together.** Read the other layers'
 releases, and ask about anything unclear on the pull request itself, tagging the people who opened
 it and me. I review them with you between Wednesday and Friday, and merge each one once it runs and
-we've settled its questions. The experience layer can try a release's branch before I merge it.
+we've settled its questions. A release runs when your app starts from the release branch and its
+own tests pass. It doesn't have to be finished. The experience layer can try a release's branch
+before I merge it.
 
 **For the content layer, the site is a stretch goal.** If your release pull request is open by the
-end of Wednesday 2 December, your screens can be on the site for your presentation. If it isn't,
+end of Wednesday 2 December, your screens can be on the site before your semester ends. If it isn't,
 your project still stands on its own, the same as it does now. In the week of 7 December your own
-work comes first: polish, your presentation, and answering the experience layer's integration
+work comes first: polish, whatever your course asks of you at the end, and answering the experience layer's integration
 requests. Your fixes go in the second release.
 
-**For the intelligence layer, the scorer on the site is a stretch goal too.** Send it with the first
-release if you can, or with the second on Wednesday 9 December.
+**For the intelligence layer, the first release has your scorer in it, however unfinished.** It
+doesn't have to pass every scoring rule. Having it upstream, where the other two layers can read it
+and try it, matters more than having it done. Whatever is still missing goes in the second release
+on Wednesday 9 December. Having the scorer drive the live site is the stretch goal.
 
 **The week of 14 December is close-out.** Nothing new goes on the site. Each team finishes its
 handoff note (H1), and the experience layer fixes what's broken until the end of its semester.
 
-**The mocks are the fallback.** Once I merge a layer's release, the site points at that layer's
-real API, and keeps the mock so it can switch back if the real API has a problem. The experience
-layer makes that switch, on purpose. It's a setting, never automatic, so nobody reading the site
-sees invented places as if they were real ones. `packages/mock-apis/README.md` says how.
+**The mocks are the fallback.** Once I merge a layer's release, the experience layer points the
+site at that layer's real API. The mock stays, so they can point it back if the real API has a
+problem. Either way it's a setting they change on purpose. Nothing switches it automatically, so
+the site never quietly swaps real places for invented ones. `packages/mock-apis/README.md` says how.
 
 **A release never changes `packages/contracts` or `packages/fixtures`.** If you need a change there,
 send it as its own pull request.
@@ -109,13 +114,17 @@ change during the semester. A change here is how something one team finds, or so
 1. **Changes land on Sundays.** The contract cannot move mid-week, and the
    upstream watch reports a change on the Monday morning after it lands. This
    limits when we can publish a change. It does not mean a change comes every
-   week, and we expect three to five across a semester.
+   week, and we expect three to five across a semester. The releases at the
+   end of the semester don't wait for a Sunday, because a release never changes
+   the contract.
 2. **Nothing lands cold.** A significant change is raised at a check-in *before*
    it is built, then published the following Sunday. You will hear "we might
    change X" before you see X change.
 3. **Your fork is pinned to a tag.** A change is *available* to you, never
    imposed. Pulling forward is a decision made together at a check-in, not
-   something that happens to you mid-sprint.
+   something that happens to you mid-sprint. Sending a release is the
+   exception: you bring your `main` up to date with upstream first, without
+   waiting for a check-in (see "Sending a release" in `docs/GIT.md`).
 
    **You hear about changes every week and adopt them when you choose.** Don't pull every Monday, because that puts you back on a moving target. Instead, `.github/workflows/upstream-contract-watch.yml`
    runs each Monday morning, compares your pinned contract version against
